@@ -45,6 +45,7 @@ PASSWORD_TOO_SHORT = "密码太短了，至少 8 位。"
 USERNAME_TOO_LONG = "用户名太长了，20 个字以内。"
 FIELD_REQUIRED = "必填项不能空着。"
 INVALID_TIME = "时间格式不对，请用 24 小时的 HH:MM。"
+ROLLOVER_DEFERRED = "这个时间点今天已经过了，新设置从明天开始生效。"
 OUT_OF_RANGE = "这个数值超出可用范围。"
 SUBJECT_UNUSABLE = "这个科目不存在或已经停用，请重新选一个。"
 

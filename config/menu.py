@@ -56,7 +56,8 @@ MENU = [
 
     # ---------------------------------------------------------- 账户（两种模式都显示）
     MenuItem("home", "账户", "首页", "/", mode="both", icon="home"),
-    MenuItem("settings", "账户", "设置", "/settings/", mode="both", icon="gear", visible=False),
+    MenuItem("settings", "账户", "设置", "/settings/", mode="both", icon="gear",
+             prefix="/settings", visible=True),
     MenuItem("appeal", "账户", "申诉与反馈", "/appeal/", mode="both", icon="chat", visible=False),
 
     # ---------------------------------------------------------- 管理（仅 admin）

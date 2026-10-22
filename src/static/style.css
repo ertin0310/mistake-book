@@ -211,3 +211,7 @@ textarea { width: 100%; resize: vertical; }
 button.rating { min-width: 108px; }
 button.rating.r1 { border-color: var(--ok); }
 button.rating.r4 { border-color: var(--danger); }
+
+.inlineform { display: inline; }
+button.link { border: none; background: none; color: var(--accent); padding: 0 2px;
+              text-decoration: underline; font-size: inherit; }

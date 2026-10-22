@@ -79,11 +79,51 @@ def practice_result(question_id):
     return redirect(url_for("study.practice"))
 
 
-def _form(form, errors):
+@bp.route("/edit/<int:question_id>", methods=["GET", "POST"])
+@decorators.require_login
+def edit_question(question_id):
+    row = question_service.practice_row(g.conn, decorators.current_user_id(), question_id)
+    if row is None:
+        abort(404)
+    if request.method == "POST":
+        try:
+            csrf.validate(request.form.get(csrf.FORM_FIELD))
+        except Exception as exc:
+            return _form(request.form, [exc.message], row), 400
+        errors = question_service.new_errors(g.conn, request.form)
+        if errors:
+            return _form(request.form, errors, row), 400
+        question_service.save_edit(g.conn, decorators.current_user_id(), question_id,
+                                   request.form)
+        flash("改好了。", "success")
+        return redirect(url_for("study.my_questions"))
+    return _form({"stem": row["stem"], "answer": row["answer_json"],
+                  "explanation": row["explanation"], "type": row["type"],
+                  "subject_id": str(row["subject_id"])}, [], row)
+
+
+@bp.post("/delete/<int:question_id>")
+@decorators.require_login
+def delete_question(question_id):
+    _require_form_token()
+    question_service.remove(g.conn, decorators.current_user_id(), question_id)
+    flash("已经放进回收站（回收站页面在第 11 步，到时候能还原）。", "success")
+    return redirect(url_for("study.my_questions"))
+
+
+def _require_form_token() -> None:
+    try:
+        csrf.validate(request.form.get(csrf.FORM_FIELD))
+    except Exception as exc:
+        abort(400, description=getattr(exc, "message", ""))
+
+
+def _form(form, errors, row=None):
     """答案控件由题型处理器给，录题页与复习页共用同一份（方案三-13）。"""
-    widgets = {key: question_service.widget(key, "form") for key, _ in
-               question_service.available_types()}
+    current = question_service.answer_text(row["answer_json"]) if row else ""
+    widgets = {key: question_service.widget(key, "form", current)
+               for key, _ in question_service.available_types()}
     return render_template("study/new_question.html", form=form, errors=errors,
-                           widgets=widgets,
+                           widgets=widgets, editing=row is not None, question=row,
                            subjects=subject_service.options(g.conn),
                            types=question_service.available_types())

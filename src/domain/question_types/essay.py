@@ -38,12 +38,18 @@ class EssayHandler(TypeHandler):
     def grade(self, answer_json: str, submitted: str):
         return None                      # 简答只能人自评
 
-    def render_widget(self, place: str) -> str:
+    def render_widget(self, place: str, value: str = "") -> str:
+        text = _escape(value)
         if place == "answer":
             return ('<textarea name="submitted" rows="4" placeholder="先自己回忆一遍再写下来，'
-                    '写不出就写"想不起来""></textarea>')
+                    f'写不出就写\"想不起来\"">{text}</textarea>')
         return ('<textarea name="answer" rows="4" placeholder="参考答案，整段写就行，'
-                '不用管 JSON"></textarea>')
+                f'不用管 JSON">{text}</textarea>')
 
 
 essay = EssayHandler()
+
+
+def _escape(text: str) -> str:
+    """往 HTML 里塞用户文本前只处理这三个字符；库里存的是原文，不受影响。"""
+    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

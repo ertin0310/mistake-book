@@ -42,10 +42,10 @@ def create(conn, user_id: int, form: dict) -> int:
         answer_json=answer_json, explanation=(form.get("explanation") or "").strip())
 
 
-def widget(type_name: str, place: str) -> str:
+def widget(type_name: str, place: str, value: str = "") -> str:
     """答案控件的 HTML。`place` 取 'form'（录题）或 'answer'（复习作答）——
     两个页面拿的是同一份，所以改一处两处一起变。"""
-    return registry.get(type_name).render_widget(place)
+    return registry.get(type_name).render_widget(place, value)
 
 
 def answer_text(answer_json: str) -> str:
@@ -86,3 +86,16 @@ def mine(conn, user_id: int, page: int = 1, subject_id=None):
 
 def shared_pool(conn, user_id: int, page: int = 1, subject_id=None):
     return QuestionRepo(conn, user_id).shared_pool(page=page, subject_id=subject_id)
+
+
+def save_edit(conn, user_id: int, question_id: int, form: dict) -> None:
+    """改题面。校验走和录题同一套规则，不另写一份。"""
+    handler = registry.get(form["type"])
+    options_json, answer_json = handler.parse(form)
+    QuestionRepo(conn, user_id).save_edit(question_id, (form.get("stem") or "").strip(),
+                                          options_json, answer_json,
+                                          (form.get("explanation") or "").strip())
+
+
+def remove(conn, user_id: int, question_id: int) -> None:
+    QuestionRepo(conn, user_id).soft_delete(question_id)

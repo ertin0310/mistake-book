@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}设置{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>设置</h1>
+  {% if errors %}<ul class="notice danger">{% for line in errors %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+
+  <form method="post" action="{{ url_for('settings.save') }}" class="stack">
+    {{ csrf_input() | safe }}
+    {% for item in fields %}
+      <label>{{ item.field.label }}
+        {% if item.field.choices %}
+        <select name="{{ item.field.key }}">
+          {% for choice in item.field.choices %}
+          <option value="{{ choice }}" {{ 'selected' if choice == item.value }}>{{ choice }}</option>
+          {% endfor %}
+        </select>
+        {% elif item.zones %}
+        <select name="{{ item.field.key }}">
+          <option value="">（用本机时间）</option>
+          {% for key, label in item.zones %}
+          <option value="{{ key }}" {{ 'selected' if key == item.value }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input name="{{ item.field.key }}" value="{{ item.value }}"
+               {% if item.field.maxlen %}maxlength="{{ item.field.maxlen }}"{% endif %}>
+        {% endif %}
+        {% if item.field.hint %}<span class="muted small">{{ item.field.hint }}</span>{% endif %}
+      </label>
+    {% endfor %}
+    <p class="muted small">时区本期只保存、不参与计算，所有日期仍按服务器所在机器时间。</p>
+    <button class="primary">保存</button>
+  </form>
+</section>
+{% endblock %}

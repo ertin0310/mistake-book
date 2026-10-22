@@ -71,6 +71,25 @@ class QuestionRepo(BaseRepo):
         self.conn.commit()
         return int(cursor.lastrowid)
 
+    def save_edit(self, question_id: int, stem: str, options_json: str,
+                  answer_json: str, explanation: str) -> None:
+        """改题面直接生效、不做快照（方案三-10）：只动自己名下的题。"""
+        self.conn.execute(
+            "UPDATE question_bank SET stem=:stem, options_json=:options, answer_json=:answer,"
+            " explanation=:explanation, updated_at=datetime('now','localtime')"
+            " WHERE id=:id AND user_id=:viewer",
+            {"stem": stem, "options": options_json, "answer": answer_json,
+             "explanation": explanation, "id": question_id, "viewer": self.viewer_id})
+        self.conn.commit()
+
+    def soft_delete(self, question_id: int) -> None:
+        """最简软删：打 deleted_at + deleted_by（回收站全套在步 11）。
+        ★ 只写自己的删除标记，管理员那套 `delisted_by` 是另一回事。"""
+        self.conn.execute(
+            "UPDATE question_bank SET deleted_at=datetime('now','localtime'), deleted_by=:viewer"
+            " WHERE id=:id AND user_id=:viewer", {"id": question_id, "viewer": self.viewer_id})
+        self.conn.commit()
+
     def touch(self, question_id: int) -> None:
         """改题面直接生效、不做快照（方案三-10）：只更新时间戳。"""
         self.conn.execute("UPDATE question_bank SET updated_at=datetime('now','localtime')"

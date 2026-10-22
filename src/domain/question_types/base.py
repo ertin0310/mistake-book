@@ -35,8 +35,9 @@ class TypeHandler(ABC):
         """判对判错；机器判不了返回 `None`，由复习页的自评接管。"""
 
     @abstractmethod
-    def render_widget(self, place: str) -> str:
-        """`place` 取 'form'（录题）或 'answer'（复习作答）。"""
+    def render_widget(self, place: str, value: str = "") -> str:
+        """`place` 取 'form'（录题/改题）或 'answer'（复习作答）；
+        `value` 是编辑时回填的现值——**录题、改题、复习三处共用同一个控件**。"""
 
 
 def text_of(form: dict, key: str) -> str:

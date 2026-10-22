@@ -2,7 +2,7 @@
 {% block title %}录题{% endblock %}
 {% block content %}
 <section class="card">
-  <h1>录一道题</h1>
+  <h1>{{ "改这道题" if editing else "录一道题" }}</h1>
 
   {% if errors %}
   <ul class="notice danger">
@@ -10,7 +10,8 @@
   </ul>
   {% endif %}
 
-  <form method="post" action="{{ url_for('study.new_question') }}" class="stack">
+  <form method="post" class="stack"
+        action="{% if editing %}{{ url_for('study.edit_question', question_id=question['id']) }}{% else %}{{ url_for('study.new_question') }}{% endif %}">
     {{ csrf_input() | safe }}
 
     <label>科目
@@ -43,9 +44,9 @@
       <textarea name="explanation" rows="3">{{ form.get('explanation', '') }}</textarea>
     </label>
 
-    <button class="primary">存进我的题目</button>
+    <button class="primary">{{ "存修改" if editing else "存进我的题目" }}</button>
   </form>
 
-  <p class="foot muted">录进来的题默认只有你自己看得到，要共享给别人得在题目页主动点「共享」。</p>
+  <p class="foot muted">{{ "改完立即生效，不做历史快照。" if editing else "录进来的题默认只有你自己看得到，要共享给别人得在题目页主动点「共享」。" }}</p>
 </section>
 {% endblock %}

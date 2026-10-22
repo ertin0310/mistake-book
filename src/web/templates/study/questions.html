@@ -24,12 +24,21 @@
 
   {% if page_obj.items %}
   <table>
-    <tr><th>题干</th><th>类型</th><th class="n">用时</th></tr>
+    <tr><th>题干</th><th>类型</th><th class="n">操作</th></tr>
     {% for row in page_obj.items %}
     <tr>
       <td>{{ row['stem'][:60] }}{% if row['stem']|length > 60 %}…{% endif %}</td>
       <td class="muted">{{ row['type'] }}</td>
-      <td class="n muted">—</td>
+      <td class="n">
+        <a href="{{ url_for('study.edit_question', question_id=row['id']) }}">改</a>
+        {% if not request.path.startswith('/study/drill') %}
+        <form method="post" class="inlineform"
+              action="{{ url_for('study.delete_question', question_id=row['id']) }}">
+          {{ csrf_input() | safe }}
+          <button class="link">删</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </table>
