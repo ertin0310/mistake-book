@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %} · 错题本</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="app">
+  <header class="topbar">
+    <div class="brand">错题本</div>
+
+    {# 模式开关：真做（方案三-18）。两条路径之一——POST /mode/<study|review> #}
+    <nav class="modeswitch" aria-label="模式">
+      {% for key, label in mode_labels.items() %}
+      <form method="post" action="{{ url_for('main.switch_mode', mode=key) }}">
+        {{ csrf_input() | safe }}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button class="mode{{ ' on' if key == mode else '' }}">{{ label }}</button>
+      </form>
+      {% endfor %}
+    </nav>
+
+    <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+      {{ csrf_input() | safe }}
+      <span class="muted">{{ username }}</span>
+      <button>退出</button>
+    </form>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      {# 模板只写循环渲染（方案二-9）：加页面 = 蓝图挂路由 + config/menu.py 加一行，
+         这里不动，也不写 `if admin` 这种散判。 #}
+      {% for group, items in menu_groups %}
+      <section class="menu-group">
+        <h2>{{ group }}</h2>
+        {% if items %}
+        <ul>
+          {% for item in items %}
+          <li class="{{ 'active' if is_active(item, request.path) }}">
+            <a href="{{ item.url }}">{{ item.label }}
+              {% if item.badge and badges.get(item.badge) %}
+              <span class="badge">{{ badges[item.badge] }}</span>
+              {% endif %}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted small">{{ menu_group_empty(group) }}</p>
+        {% endif %}
+      </section>
+      {% endfor %}
+    </aside>
+
+    <main class="content">
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+      <p class="notice {{ category }}">{{ message }}</p>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

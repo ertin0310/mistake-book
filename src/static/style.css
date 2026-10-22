@@ -1,0 +1,185 @@
+/* 全站单文件样式（方案三-18）。主题色：**蓝色**（2026-10-22 由浅黄改蓝，你点的）。
+ *
+ * 颜色全部走下面这几个变量——想调整体色调，只改 :root 这一段，别处不用碰。
+ * 步 17 做界面美化时也是改这个文件，不新增样式文件。
+ */
+
+:root {
+  --bg: #f2f6fc;            /* 页面底色：极浅的冷蓝，不刺眼 */
+  --bg-soft: #e2ebf7;       /* 稍深一档：表头、hover、顶栏 */
+  --card: #ffffff;          /* 卡片底：纯白，压在浅蓝底上边界清楚 */
+  --line: #cfdded;          /* 描边：淡蓝灰 */
+  --ink: #1f2a37;           /* 正文：深蓝灰，不用纯黑 */
+  --ink-soft: #64748b;      /* 次要文字 */
+  --accent: #2563eb;        /* 主色：蓝，用于按钮与链接 */
+  --accent-ink: #ffffff;    /* 主色上的文字 */
+  --danger: #b3402b;
+  --danger-bg: #fbe9e5;
+  --ok: #2f7a52;
+  --ok-bg: #e6f2ea;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(30, 58, 95, .09), 0 6px 18px rgba(30, 58, 95, .07);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.65 "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+
+a { color: var(--accent); }
+
+/* ---------------------------------------------------------------- 卡片 */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+
+body.auth {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-card { width: min(360px, 100%); }
+
+.brand { margin: 0; font-size: 22px; letter-spacing: .04em; }
+.sub { margin: 2px 0 18px; color: var(--ink-soft); font-size: 13px; }
+
+/* ---------------------------------------------------------------- 表单 */
+
+.stack { display: grid; gap: 12px; }
+
+label { display: grid; gap: 5px; font-size: 13px; color: var(--ink-soft); }
+
+input, select, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px 11px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--bg-soft);
+  border-color: var(--accent);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg-soft);
+  color: var(--ink);
+  padding: 9px 14px;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+button:hover { filter: saturate(1.15) brightness(.98); }
+
+.foot { margin: 16px 0 0; font-size: 13px; color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------- 提示条 */
+
+.notice {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  font-size: 14px;
+}
+
+.notice.danger { color: var(--danger); background: var(--danger-bg); border-color: #e8c3b9; }
+.notice.warning { color: #92610f; background: #fdf1dc; }
+.notice.success { color: var(--ok); background: var(--ok-bg); border-color: #cfe0c6; }
+
+/* ---------------------------------------------------------------- 表格与列表 */
+
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--bg-soft); font-weight: 600; font-size: 13px; }
+
+.muted { color: var(--ink-soft); }
+.empty { padding: 28px; text-align: center; color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------- 翻页条（组件占位，步 17 统一美化） */
+
+.pager { display: flex; gap: 8px; align-items: center; margin-top: 16px; font-size: 13px; }
+.pager a, .pager span.current {
+  padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; text-decoration: none;
+}
+.pager span.current { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* ---------------------------------------------------------------- 首页自检页（步 5 会被侧边栏布局取代） */
+
+.auth-card.wide { width: min(760px, 100%); }
+
+.topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.inline { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+
+code { background: var(--bg-soft); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+td.n { text-align: right; width: 90px; }
+.ok { color: var(--ok); }
+.bad { color: var(--danger); }
+
+/* ---------------------------------------------------------------- 应用外壳（步 5） */
+
+body.app { display: grid; grid-template-rows: auto 1fr; min-height: 100vh; }
+
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 20px; background: var(--bg-soft); border-bottom: 1px solid var(--line);
+}
+.topbar .brand { font-size: 17px; font-weight: 700; margin: 0; }
+.topbar form.inline { margin-left: auto; }
+
+.modeswitch { display: flex; gap: 6px; }
+.modeswitch form { display: inline; }
+button.mode { background: transparent; border-color: transparent; color: var(--ink-soft); }
+button.mode.on {
+  background: var(--card); border-color: var(--line); color: var(--ink); font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.layout { display: grid; grid-template-columns: 210px 1fr; gap: 22px; padding: 22px; align-items: start; }
+
+.sidebar { display: grid; gap: 18px; }
+.menu-group h2 {
+  margin: 0 0 6px; font-size: 12px; letter-spacing: .1em; text-transform: none;
+  color: var(--ink-soft); font-weight: 600;
+}
+.menu-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.menu-group a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px; text-decoration: none; color: var(--ink);
+}
+.menu-group a:hover { background: var(--bg-soft); }
+.menu-group li.active a { background: var(--card); border: 1px solid var(--line); font-weight: 600; }
+.badge {
+  margin-left: auto; background: var(--accent); color: var(--accent-ink);
+  border-radius: 999px; padding: 0 7px; font-size: 12px;
+}
+
+.content { display: grid; gap: 16px; align-content: start; }
+.small { font-size: 13px; }
+
+@media (max-width: 720px) {
+  .layout { grid-template-columns: 1fr; }
+}

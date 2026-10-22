@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}错题本{% endblock %} · 间隔重复复习</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth">
+  <main class="card auth-card">
+    <h1 class="brand">错题本</h1>
+    <p class="sub">间隔重复复习系统</p>
+
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <p class="notice {{ category }}">{{ message }}</p>
+    {% endfor %}
+
+    {% if error %}<p class="notice danger">{{ error }}</p>{% endif %}
+
+    {% block body %}{% endblock %}
+  </main>
+</body>
+</html>

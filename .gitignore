@@ -1,0 +1,20 @@
+# 运行时产物：数据库与上传的图片都不进仓库（README 会写明备份自理）
+var/
+*.db
+*.sqlite3
+
+# 密钥只进本地 .env，仓库里只留 .env.example
+.env
+
+# 虚拟环境与缓存
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 编辑器与系统杂物
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}地基自检{% endblock %}
+{% block content %}
+<main class="card">
+  <h1>地基自检</h1>
+  <p class="{{ 'ok' if ok else 'bad' }}">
+    {% if ok %}19 张表全部建成。{% else %}表数不对：建了 {{ tables|length }} 张，应为 {{ expected }} 张。{% endif %}
+  </p>
+  <p class="muted">
+    库文件：<code>{{ db_path }}</code><br>
+    今天的复习日：<code>{{ review_date }}</code>（切换时刻默认 00:00）<br>
+    AI 录入入口：{{ "已配置" if ai_on else "未配置，整块不显示（其余功能不受影响）" }}
+  </p>
+  <p class="muted">第 0 档到此为止：录题在第 8 步、今日复习在第 9 步，左边那两组现在还空着。</p>
+
+  <table>
+    <tr><th>表</th><th class="n">行数</th></tr>
+    {% for name, count in rows %}
+      <tr><td><code>{{ name }}</code></td><td class="n">{{ count }}</td></tr>
+    {% endfor %}
+  </table>
+</main>
+{% endblock %}

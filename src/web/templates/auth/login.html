@@ -1,0 +1,16 @@
+{% extends "auth/_shell.html" %}
+{% block title %}登录{% endblock %}
+{% block body %}
+<form method="post" action="{{ url_for('auth.login') }}" class="stack">
+  {{ csrf_input() | safe }}
+  <input type="hidden" name="next" value="{{ next }}">
+  <label>用户名
+    <input name="username" autocomplete="username" required autofocus>
+  </label>
+  <label>密码
+    <input name="password" type="password" autocomplete="current-password" required>
+  </label>
+  <button class="primary">登录</button>
+</form>
+<p class="foot">还没有账号？<a href="{{ url_for('auth.register') }}">注册一个</a></p>
+{% endblock %}
