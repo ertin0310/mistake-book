@@ -183,3 +183,18 @@ button.mode.on {
 @media (max-width: 720px) {
   .layout { grid-template-columns: 1fr; }
 }
+
+/* ---------------------------------------------------------------- 列表页与表单页（步 8） */
+
+.pagehead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pagehead h1 { margin: 0; font-size: 19px; }
+.primary-link {
+  padding: 6px 12px; border-radius: 7px; text-decoration: none; font-size: 14px;
+  background: var(--accent); color: var(--accent-ink);
+}
+
+.filterbar { display: flex; gap: 10px; align-items: end; margin: 14px 0 4px; }
+.filterbar label { min-width: 160px; }
+
+ul.notice { list-style: disc; padding-left: 20px; }
+textarea { width: 100%; resize: vertical; }

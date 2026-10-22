@@ -33,9 +33,9 @@ GROUP_MODE = {"学习": "study", "复习": "review"}
 MENU = [
     # ---------------------------------------------------------- 学习模式
     MenuItem("study_home", "学习", "我的题目", "/study/", mode="study", icon="book",
-             visible=False),
+             prefix="/study", visible=True),
     MenuItem("study_drill", "学习", "题库刷题", "/study/drill", mode="study", icon="layers",
-             visible=False),
+             prefix="/study/drill", visible=True),
     MenuItem("knowledge", "学习", "知识点", "/knowledge/", mode="study", icon="tag",
              visible=False),
     MenuItem("knowledge_appeal", "学习", "我的知识点申请", "/knowledge/mine", mode="study",

@@ -1,0 +1,20 @@
+{# 全站统一的翻页条（方案二-15）。只认 `page_obj`，不认具体页面：
+   列表页、今日复习页都 include 这一个文件，样式和回落行为只有一份。 #}
+{% if page_obj.total %}
+<nav class="pager">
+  {% set args = request.args.to_dict() %}
+  {% if page_obj.total_pages > 1 %}
+    {% if page_obj.page > 1 %}
+      <a href="{{ url_for(request.endpoint, **dict(args, page=page_obj.page - 1)) }}">上一页</a>
+    {% endif %}
+    {% for n in range(1, page_obj.total_pages + 1) %}
+      {% if n == page_obj.page %}<span class="current">{{ n }}</span>
+      {% else %}<a href="{{ url_for(request.endpoint, **dict(args, page=n)) }}">{{ n }}</a>{% endif %}
+    {% endfor %}
+    {% if page_obj.page < page_obj.total_pages %}
+      <a href="{{ url_for(request.endpoint, **dict(args, page=page_obj.page + 1)) }}">下一页</a>
+    {% endif %}
+  {% endif %}
+  <span class="muted">共 {{ page_obj.total }} 条 · 每页 {{ page_obj.page_size }}</span>
+</nav>
+{% endif %}

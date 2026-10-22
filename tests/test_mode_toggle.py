@@ -31,15 +31,17 @@ def test_new_user_defaults_to_study(client):
 
 
 def test_menu_groups_swap_with_mode(client):
+    """切模式 → 侧边栏那一组整块换掉（步 8 之后学习组已经有真条目了，所以
+    这里改成"学习组有题目链接、复习组还是空提示"，两边各验一次）。"""
     sign_up(client, username="stu")
     study_body = client.get("/").get_data(as_text=True)
-    assert prompts.MENU_GROUP_EMPTY["学习"] in study_body
-    assert prompts.MENU_GROUP_EMPTY["复习"] not in study_body
+    assert "我的题目" in study_body
+    assert prompts.MENU_GROUP_EMPTY["复习"] not in study_body     # 复习组整块不出现
 
     client.post("/mode/review", data={"csrf_token": csrf_token(client, "/")})
     review_body = client.get("/").get_data(as_text=True)
-    assert prompts.MENU_GROUP_EMPTY["复习"] in review_body
-    assert prompts.MENU_GROUP_EMPTY["学习"] not in review_body
+    assert prompts.MENU_GROUP_EMPTY["复习"] in review_body        # 换成复习组 + 它的空提示
+    assert "我的题目" not in review_body                          # 学习组整块消失
 
 
 def test_mode_is_not_a_permission(client):

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}题目列表{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="pagehead">
+    <h1>
+      {% if request.path.startswith('/study/drill') %}共享池{% else %}我的题目{% endif %}
+    </h1>
+    <a class="primary-link" href="{{ url_for('study.new_question') }}">录一道</a>
+  </header>
+
+  <form method="get" class="filterbar">
+    <label>科目
+      <select name="subject">
+        <option value="">全部科目</option>
+        {% for id, name in subjects %}
+        <option value="{{ id }}" {{ 'selected' if id == (request.args.get('subject')|int(default=0)) }}>
+          {{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button>筛选</button>
+  </form>
+
+  {% if page_obj.items %}
+  <table>
+    <tr><th>题干</th><th>类型</th><th class="n">用时</th></tr>
+    {% for row in page_obj.items %}
+    <tr>
+      <td>{{ row['stem'][:60] }}{% if row['stem']|length > 60 %}…{% endif %}</td>
+      <td class="muted">{{ row['type'] }}</td>
+      <td class="n muted">—</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">{{ empty_text }}</p>
+  {% endif %}
+
+  {% include "_pager.html" %}
+</section>
+{% endblock %}

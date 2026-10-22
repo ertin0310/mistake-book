@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}录题{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>录一道题</h1>
+
+  {% if errors %}
+  <ul class="notice danger">
+    {% for line in errors %}<li>{{ line }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('study.new_question') }}" class="stack">
+    {{ csrf_input() | safe }}
+
+    <label>科目
+      <select name="subject_id" required>
+        <option value="">选一个科目</option>
+        {% for id, name in subjects %}
+        <option value="{{ id }}" {{ 'selected' if id|string == form.get('subject_id') }}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>题型
+      <select name="type">
+        {% for key, label in types %}
+        <option value="{{ key }}" {{ 'selected' if key == (form.get('type') or 'essay') }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>题干
+      <textarea name="stem" rows="3" required>{{ form.get('stem', '') }}</textarea>
+    </label>
+
+    {# 答案那一栏的控件由题型处理器给——录题页与复习作答页共用同一份，不写两遍 #}
+    <label>参考答案
+      {{ widgets[form.get('type') or 'essay'] | safe }}
+    </label>
+
+    <label>解析（可选）
+      <textarea name="explanation" rows="3">{{ form.get('explanation', '') }}</textarea>
+    </label>
+
+    <button class="primary">存进我的题目</button>
+  </form>
+
+  <p class="foot muted">录进来的题默认只有你自己看得到，要共享给别人得在题目页主动点「共享」。</p>
+</section>
+{% endblock %}
