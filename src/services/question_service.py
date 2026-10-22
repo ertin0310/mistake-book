@@ -4,10 +4,13 @@
 `mine()` / `shared_pool()` 取列表。SQL 一律不在这一层出现。
 """
 
+import json
+
 from config import prompts
-from src.data.repository.question_repo import QuestionRepo
+from src.data.repository.question_repo import MINE, QuestionRepo
+from src.domain.errors import ValidationError
 from src.domain.question_types import registry
-from src.services import subject_service
+from src.services import review_service, subject_service
 
 
 def available_types() -> list[tuple[str, str]]:
@@ -43,6 +46,38 @@ def widget(type_name: str, place: str) -> str:
     """答案控件的 HTML。`place` 取 'form'（录题）或 'answer'（复习作答）——
     两个页面拿的是同一份，所以改一处两处一起变。"""
     return registry.get(type_name).render_widget(place)
+
+
+def answer_text(answer_json: str) -> str:
+    """库里的标准 JSON 还原给人看的文本。读不懂就原样返回，绝不崩。"""
+    try:
+        data = json.loads(answer_json)
+    except ValueError:
+        return answer_json
+    if isinstance(data, dict):
+        return data.get("text") or data.get("letters") or answer_json
+    if isinstance(data, list):
+        return " ／ ".join("、".join(x) if isinstance(x, list) else str(x) for x in data)
+    return str(data)
+
+
+def next_to_practice(conn, user_id: int):
+    """学习模式取下一道练习题（自己的，按录入顺序）。"""
+    page = QuestionRepo(conn, user_id).mine(page=1, size=1)
+    return page.items[0] if page.items else None
+
+
+def practice_row(conn, user_id: int, question_id: int):
+    page = QuestionRepo(conn, user_id).read_named(
+        "mine", f"({MINE}) AND id = :only", {"only": question_id})
+    return page.items[0] if page.items else None
+
+
+def record_practice(conn, user_id: int, row, result: str, submitted: str = "") -> None:
+    """记一笔做题结果；`result='wrong'` 由复习服务负责把题排进今日队列（闭环那一环）。"""
+    if result not in ("right", "wrong"):
+        raise ValidationError(prompts.FIELD_REQUIRED)
+    review_service.record_attempt(conn, user_id, row["id"], row["subject_id"], result, submitted)
 
 
 def mine(conn, user_id: int, page: int = 1, subject_id=None):

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}复习{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">第 {{ row.mistake['step_index'] }} 级 · 上次间隔 {{ row.mistake['interval_days'] }} 天 · 已复习 {{ row.mistake['review_count'] }} 次</p>
+  <h2 class="stem">{{ row.question['stem'] }}</h2>
+
+  {# ★ 答案此刻不出现：先自己回忆，再点「看答案」 #}
+  <form method="post" action="{{ url_for('review.reveal', mistake_id=row.mistake['id']) }}" class="stack">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="started" value="{{ started }}">
+    <label>你的回忆（写不写都行，写了印象更深）
+      <textarea name="submitted" rows="4" placeholder="先自己过一遍再写"></textarea>
+    </label>
+    <button class="primary">{{ prompts.ANSWER_HIDDEN_BUTTON }}</button>
+  </form>
+</section>
+{% endblock %}

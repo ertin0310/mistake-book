@@ -11,7 +11,8 @@ from flask import Flask, g
 from config import menu, permissions, prompts, settings
 from src.data import db, seed
 from src.web import csrf, decorators
-from src.web.blueprints import auth_blueprint, main, study_blueprint
+from src.web.blueprints import (auth_blueprint, main, review_blueprint,
+                           study_blueprint)
 
 APP_NAME = "错题本 · 间隔重复复习"
 
@@ -31,6 +32,7 @@ def create_app() -> Flask:
     app.register_blueprint(main.bp)
     app.register_blueprint(auth_blueprint.bp)
     app.register_blueprint(study_blueprint.bp)
+    app.register_blueprint(review_blueprint.bp)
     _register_connection(app)
     _register_template_globals(app)
     return app
@@ -49,6 +51,7 @@ def _register_template_globals(app: Flask) -> None:
         role = decorators.current_role()
         return {
             "app_name": APP_NAME,
+            "prompts": prompts,          # 模板里所有中文都从这份文案取，不写死字面量
             "csrf_input": csrf.input_tag,
             "signed_in": decorators.current_user_id() is not None,
             "is_admin": role == permissions.ROLE_ADMIN,

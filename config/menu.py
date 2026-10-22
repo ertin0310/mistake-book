@@ -46,7 +46,7 @@ MENU = [
 
     # ---------------------------------------------------------- 复习模式
     MenuItem("review_today", "复习", "今日复习", "/review/today", mode="review", icon="sun",
-             badge="due_count", visible=False),
+             prefix="/review", badge="due_count", visible=True),
     MenuItem("review_invalid", "复习", "已失效的题目", "/review/invalid", mode="review",
              icon="warning", badge="invalid_count", visible=False),
     MenuItem("stats", "复习", "统计", "/review/stats", mode="review", icon="chart",

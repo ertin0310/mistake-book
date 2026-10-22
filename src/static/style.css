@@ -198,3 +198,16 @@ button.mode.on {
 
 ul.notice { list-style: disc; padding-left: 20px; }
 textarea { width: 100%; resize: vertical; }
+
+/* ---------------------------------------------------------------- 复习卡片（步 9） */
+
+.stem { font-size: 17px; line-height: 1.6; margin: 6px 0 14px; }
+.answer { background: var(--bg-soft); border-left: 3px solid var(--accent);
+          padding: 10px 12px; border-radius: 0 7px 7px 0; white-space: pre-wrap; }
+.reveal { margin: 4px 0 10px; }
+.reveal summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ratings { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+button.rating { min-width: 108px; }
+button.rating.r1 { border-color: var(--ok); }
+button.rating.r4 { border-color: var(--danger); }

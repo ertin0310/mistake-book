@@ -49,6 +49,13 @@ class QuestionRepo(BaseRepo):
         page = self.read_named("mine", f"({MINE}) AND id = :only", {"only": question_id})
         return page.items[0] if page.items else None
 
+    def any_visible(self, question_id: int):
+        """复习卡片取题用：自己的或共享的都行，但被删/被收起的不给。"""
+        page = self.read_named(
+            "mine", "(user_id = :viewer OR visibility = 'shared') AND deleted_at IS NULL"
+                    " AND delisted_by IS NULL AND id = :only", {"only": question_id})
+        return page.items[0] if page.items else None
+
     # ------------------------------------------------------------ 写
 
     def add(self, subject_id: int, type_name: str, stem: str, options_json: str,

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}看答案{% endblock %}
+{% block content %}
+<section class="card">
+  <h2 class="stem">{{ row.question['stem'] }}</h2>
+  {% if submitted %}<p class="muted">你写的：{{ submitted }}</p>{% endif %}
+
+  <h3>参考答案</h3>
+  <p class="answer">{{ answer_text }}</p>
+  {% if row.question['explanation'] %}
+    <h3>解析</h3><p class="muted">{{ row.question['explanation'] }}</p>
+  {% endif %}
+
+  <p class="muted">这题你花了 {{ seconds }} 秒。现在给自己评一档：</p>
+
+  <form method="post" action="{{ url_for('review.rate', mistake_id=row.mistake['id']) }}" class="ratings">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="started" value="{{ started }}">
+    {% for value, label in ratings.items() %}
+      <button name="rating" value="{{ value }}" class="rating r{{ value }}">{{ value }} {{ label }}</button>
+    {% endfor %}
+  </form>
+</section>
+{% endblock %}

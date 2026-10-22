@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}练习{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>学习模式 · 做题</h1>
+  {% if row %}
+    <h2 class="stem">{{ row['stem'] }}</h2>
+    <form method="post" action="{{ url_for('study.practice_result', question_id=row['id']) }}" class="stack">
+      {{ csrf_input() | safe }}
+      <label>你的作答
+        <textarea name="submitted" rows="4" placeholder="先写下来再对答案"></textarea>
+      </label>
+      <details class="reveal">
+        <summary>对答案</summary>
+        <p class="answer">{{ answer_text }}</p>
+        {% if row['explanation'] %}<p class="muted">{{ row['explanation'] }}</p>{% endif %}
+      </details>
+      <div class="row">
+        <button name="result" value="right" class="primary">做对了</button>
+        <button name="result" value="wrong">做错了，排进复习</button>
+      </div>
+    </form>
+  {% else %}
+    <p class="empty">你还没有题目，先去<a href="{{ url_for('study.new_question') }}">录一道</a>。</p>
+  {% endif %}
+</section>
+{% endblock %}

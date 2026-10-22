@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}今日复习{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="pagehead">
+    <h1>今日复习</h1>
+    <span class="muted">复习日 {{ queue.review_date }} · 上限 {{ queue.cap }} 道</span>
+  </header>
+
+  {% if first %}
+    <p>今天到期 <strong>{{ queue.total }}</strong> 道。
+      <a class="primary-link" href="{{ url_for('review.card', mistake_id=first) }}">开始第 1 道</a>
+    </p>
+    {% if queue.over %}
+      <p class="notice warning">
+        今日另有 {{ queue.over }} 道到期，已到每日上限未安排。
+        <a href="{{ url_for('review.today', extra=10) }}">再加 10 题</a>
+      </p>
+    {% endif %}
+    {% include "_pager.html" %}
+  {% else %}
+    <p class="empty">今天没有到期的错题。先去学习模式做几道题，做错的会自动排进来。</p>
+  {% endif %}
+</section>
+{% endblock %}

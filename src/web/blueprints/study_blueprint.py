@@ -3,8 +3,10 @@
 这一层只收表单、调 service、渲染（方案二-1）——SQL 与业务判断都不许出现在这儿。
 """
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import (Blueprint, abort, flash, g, redirect, render_template, request,
+                   url_for)
 
+from config import prompts
 from src.services import question_service, subject_service
 from src.web import csrf, decorators
 
@@ -51,6 +53,30 @@ def new_question():
     question_service.create(g.conn, decorators.current_user_id(), request.form)
     flash("录好了，已经放进你的题目列表。", "success")
     return redirect(url_for("study.my_questions"))
+
+
+@bp.get("/practice")
+@decorators.require_login
+def practice():
+    """学习模式做题：先作答再自己对答案，标记"做错了"就当场排进今日复习（方案三-13）。"""
+    row = question_service.next_to_practice(g.conn, decorators.current_user_id())
+    if row is None:
+        return render_template("study/practice.html", row=None, answer_text="")
+    return render_template("study/practice.html", row=row, revealed=False)
+
+
+@bp.post("/practice/<int:question_id>")
+@decorators.require_login
+def practice_result(question_id):
+    csrf.validate(request.form.get(csrf.FORM_FIELD))
+    row = question_service.practice_row(g.conn, decorators.current_user_id(), question_id)
+    if row is None:
+        abort(404, description=prompts.NOT_FOUND)
+    question_service.record_practice(g.conn, decorators.current_user_id(), row,
+                                     request.form.get("result"),
+                                     request.form.get("submitted", ""))
+    flash("记下了。做错的题今天就会出现在复习队列里。", "success")
+    return redirect(url_for("study.practice"))
 
 
 def _form(form, errors):
