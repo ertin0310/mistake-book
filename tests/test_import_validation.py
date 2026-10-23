@@ -32,7 +32,8 @@ def test_hundred_rows_with_three_dirty_ones_report_line_numbers(db):
 
     assert len(result["rows"]) == 100
     assert [row.line for row in result["blocked"]] == [8, 43, 89]
-    assert prompts.FIELD_REQUIRED in result["blocked"][0].errors
+    assert prompts.FIELD_REQUIRED in result["blocked"][0].errors[0]
+    assert "列「stem」" in result["blocked"][0].errors[0]      # 说的是哪一列空着
     assert "列" in result["blocked"][1].errors[0]
     assert "还不支持" in result["blocked"][2].errors[0]
     assert len(result["ok"]) == 97

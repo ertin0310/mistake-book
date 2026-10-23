@@ -83,3 +83,16 @@ ANSWER_HIDDEN_BUTTON = "看答案"
 SHARED_MARK = "已共享"
 DELISTED_MARK = "知识点已下架"
 PURGED_NOTE = "已过期 {count} 条，不再出现在这里，也不影响你的复习。"
+
+
+# --------------------------------------------------------------- 导入与导出
+
+SUBJECT_UNUSABLE_TITLE = "这个科目用不了"
+IMPORT_EMPTY_FILE = "这个文件是空的。"
+
+EXPORT_BUTTON = "导出 CSV"
+EXPORT_KIND_LABELS = {"questions": "题目清单", "review_log": "复习记录"}
+EXPORT_NOTICES = {
+    "questions": "这一份可以直接再导回来（列名、答案格式和导入模板一模一样）。",
+    "review_log": "复习流水只导出、不导回——它是历史，不是可编辑的数据。",
+}

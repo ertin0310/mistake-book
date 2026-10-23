@@ -19,6 +19,9 @@ MINE = "user_id = :viewer AND deleted_at IS NULL AND delisted_by IS NULL"
 SHARED_POOL = ("deleted_at IS NULL AND delisted_by IS NULL AND visibility = 'shared'"
                " AND (user_id IS NULL OR user_id <> :viewer)")
 
+# 导出一次取全用的页宽。列表页永远用 `settings.PAGE_SIZE`，这个数只出现在 `mine_all()` 里。
+EXPORT_ALL = 1_000_000
+
 
 class QuestionRepo(BaseRepo):
     table = "question_bank"
@@ -35,6 +38,14 @@ class QuestionRepo(BaseRepo):
 
     def shared_pool(self, page: int = 1, subject_id: int | None = None, size: int | None = None):
         return self._page("shared_pool", SHARED_POOL, page, subject_id, size)
+
+    def mine_all(self) -> list:
+        """导出用的"整份"读法：条件与 `mine()` 一字不差，只是不翻页。
+
+        ★ 不再写第二条 SQL——翻页是给屏幕用的，导出不是；两条路共用同一个具名读法，
+          "什么算我的题"这件事才只有一份定义。
+        """
+        return self.read_named("mine", MINE, order="id", page_size=EXPORT_ALL).items
 
     def _page(self, read_name: str, clause: str, page: int, subject_id, size):
         where, params = clause, {}

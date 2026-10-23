@@ -18,6 +18,7 @@ from config import csv_spec, schedule, settings, tags
 from src.data import db
 from src.data.repository.user_repo import UserRepo
 from src.services import auth_service
+from src.domain import normalize
 from src.domain.scheduling import registry
 from src.domain.scheduling.base import ReviewState
 
@@ -324,7 +325,11 @@ def _insert_question(conn, owner_id, subject_id, qtype, stem, options, answer,
         "explanation, source, visibility, shared_at, created_at, updated_at) "
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
         (owner_id, subject_id, qtype, stem,
-         json.dumps(options, ensure_ascii=False), json.dumps(answer, ensure_ascii=False),
+         # ★ 走导入链路同一个列内规范化函数：库里的 `options_json` / `answer_json`
+         #   从此只有一种写法（`{"letters":"AC"}` 而不是 `{"letters": "AC"}`），
+         #   步 13 的"导出再导回逐字节一致"才是真的成立。
+         normalize.to_canonical_json("options", json.dumps(options, ensure_ascii=False), qtype),
+         normalize.to_canonical_json("answer", json.dumps(answer, ensure_ascii=False), qtype),
          explanation, source, "shared" if shared else "private",
          _stamp(today - timedelta(days=offset_days - 1)) if shared else None,
          _stamp(today - timedelta(days=offset_days)),

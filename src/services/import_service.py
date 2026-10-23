@@ -60,7 +60,7 @@ def validate_row(conn, target: str, row) -> None:
     data = {key: (row.data.get(key) or "").strip() for key in spec["columns"]}
     for column in spec["required"]:
         if not data.get(column):
-            row.errors.append(prompts.FIELD_REQUIRED)
+            row.errors.append(f"列「{column}」{prompts.FIELD_REQUIRED}")
     for column, limit in spec["maxlen"].items():
         if len(data.get(column, "")) > limit:
             row.errors.append(f"{column} 超过 {limit} 字")
@@ -90,10 +90,8 @@ def _validate_question_row(conn, data: dict, row) -> None:
 
 
 def _subject_id(conn, name: str):
-    for row in SubjectRepo(conn).options():
-        if row["name"] == name:
-            return row["id"]
-    return None
+    """按名字找科目。借 `name_map()`（只装当前可用的）反着查，与下拉框同一个口径。"""
+    return {value: key for key, value in SubjectRepo(conn).name_map().items()}.get(name)
 
 
 def _split_points(raw: str) -> list:

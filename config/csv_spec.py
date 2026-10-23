@@ -37,3 +37,9 @@ SPECS = {
 
 # 多值分隔：知识点一格里用分号隔开（★ 不用逗号，逗号是 CSV 自己的分隔符）
 MULTI_VALUE_SEPARATOR = ";"
+
+# ---------------------------------------------------------------- 复习记录（只导出不导回）
+
+REVIEW_COLUMNS = ("reviewed_on", "reviewed_at", "stem", "rating", "rating_source",
+                  "interval_before", "interval_after", "due_date_before", "due_date_after",
+                  "duration_seconds")

@@ -6,6 +6,7 @@
 import csv
 from io import StringIO
 
+from config import prompts
 from src.data.importers.base import FormatImporter, ParsedRow
 
 
@@ -18,7 +19,7 @@ class CsvImporter(FormatImporter):
         try:
             header = next(reader)
         except StopIteration:
-            return [ParsedRow(line=1, errors=["这个文件是空的。"])]
+            return [ParsedRow(line=1, errors=[prompts.IMPORT_EMPTY_FILE])]
         header = [name.strip().lstrip("﻿") for name in header]
         missing = [name for name in columns if name not in header]
         if missing:

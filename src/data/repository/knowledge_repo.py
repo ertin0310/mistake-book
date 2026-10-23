@@ -36,6 +36,14 @@ class KnowledgeRepo(BaseRepo):
                                  "clean": normalize.normalize_name(name)})
         return rows[0]["id"] if rows else None
 
+    def names_by_question(self, question_id: int) -> list:
+        """这道题挂了哪些还在用池子里的知识点名（导出题目清单、以后详情页都靠它）。"""
+        return [row["name"] for row in self.conn.execute(
+            "SELECT kp.name FROM question_knowledge_point link"
+            " JOIN knowledge_point kp ON kp.id = link.knowledge_point_id"
+            " WHERE link.question_id = :q AND kp.status = 'approved' AND kp.deleted_at IS NULL"
+            " ORDER BY kp.id", {"q": question_id})]
+
     def submit(self, user_id: int, subject_id: int, name: str) -> int:
         """提交即 `approved` 所有人可用；`reviewed_by` 留空 = 进审核队列（三-6）。"""
         clean = normalize.normalize_name(name)

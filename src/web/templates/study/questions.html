@@ -7,6 +7,10 @@
       {% if request.path.startswith('/study/drill') %}共享池{% else %}我的题目{% endif %}
     </h1>
     <a class="primary-link" href="{{ url_for('study.new_question') }}">录一道</a>
+    {% if not request.path.startswith('/study/drill') %}
+    <a class="muted" href="{{ url_for('exporter.download', kind='questions') }}"
+       title="{{ prompts.EXPORT_NOTICES.questions }}">{{ prompts.EXPORT_BUTTON }}</a>
+    {% endif %}
   </header>
 
   <form method="get" class="filterbar">

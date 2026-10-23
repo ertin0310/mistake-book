@@ -5,6 +5,8 @@
   <header class="pagehead">
     <h1>今日复习</h1>
     <span class="muted">复习日 {{ queue.review_date }} · 上限 {{ queue.cap }} 道</span>
+    <a class="muted" href="{{ url_for('exporter.download', kind='review_log') }}"
+       title="{{ prompts.EXPORT_NOTICES.review_log }}">{{ prompts.EXPORT_BUTTON }}</a>
   </header>
 
   {% if first %}
