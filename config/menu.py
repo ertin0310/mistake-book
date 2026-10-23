@@ -34,6 +34,8 @@ MENU = [
     # ---------------------------------------------------------- 学习模式
     MenuItem("study_home", "学习", "我的题目", "/study/", mode="study", icon="book",
              prefix="/study", visible=True),
+    MenuItem("study_new", "学习", "手动录题", "/study/new", mode="study", icon="pen",
+             prefix="/study/new", visible=True),
     MenuItem("study_drill", "学习", "题库刷题", "/study/drill", mode="study", icon="layers",
              prefix="/study/drill", visible=True),
     MenuItem("knowledge", "学习", "知识点", "/knowledge/", mode="study", icon="tag",

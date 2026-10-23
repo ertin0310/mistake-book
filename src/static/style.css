@@ -338,3 +338,10 @@ a.cta { display: inline-block; margin-top: 4px; padding: 12px 28px; border-radiu
         font-size: 16px; font-weight: 600; box-shadow: var(--shadow); }
 a.cta:hover { filter: brightness(1.07); }
 @media (max-width: 560px) { .hero__figures { grid-template-columns: 1fr; } }
+
+/* 导入页的说明块：示例与提示词都要能整段选中复制，所以用只读文本框而不是 <pre> */
+textarea.sample {
+  font-family: Consolas, "Courier New", monospace; font-size: 12.5px; line-height: 1.55;
+  background: var(--bg-soft); color: var(--ink); white-space: pre; overflow: auto;
+  resize: vertical;
+}

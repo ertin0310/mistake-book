@@ -82,7 +82,7 @@ EMPTY_POOL = "共享池暂时是空的——等有人共享题目，这里就会
 EMPTY_QUEUE = "今天没有到期的错题。先去学习模式做几道题，做错的会自动排进来。"
 EMPTY_TRASH = "回收站是空的。删掉的东西会在这儿留 30 天。"
 EMPTY_TRASH_GROUP = "这一类还没有内容。"
-EMPTY_IMPORT = "没有可导入的行，先回去改改文件。"
+EMPTY_IMPORT = "本次没有可导入的内容，请检查文件格式与列名。"
 EMPTY_STATS_TREND = "这 30 天还没有复习记录。去「今日复习」刷几道，这张图就有了。"
 EMPTY_STATS_WEAK = "暂时没有能统计的错题知识点（已下架的知识点不参与排行，也不报错）。"
 
@@ -101,7 +101,7 @@ PURGED_NOTE = "已过期 {count} 条，不再出现在这里，也不影响你�
 # --------------------------------------------------------------- 导入与导出
 
 SUBJECT_UNUSABLE_TITLE = "这个科目用不了"
-IMPORT_EMPTY_FILE = "这个文件是空的。"
+IMPORT_EMPTY_FILE = "所选文件没有内容，请确认后再导入。"
 
 EXPORT_BUTTON = "导出 CSV"
 EXPORT_KIND_LABELS = {"questions": "题目清单", "review_log": "复习记录"}
@@ -152,3 +152,29 @@ OPTIONS_TITLE = "选项"
 RETRACT_BUTTON = "我其实答对了，收回这道错题"
 RETRACTED = "已经收回，这道题不再排进复习队列了。"
 RETRACT_REFUSED = "这道题已经复习过，或者不是自动排进来的，不能收回（历史要留着）。"
+
+# --------------------------------------------------------------- 导入页说明文案
+
+IMPORT_LEAD = "批量导入支持题目、知识点、科目三类对象，文件可以是 CSV 或 JSONL。"
+IMPORT_HOWTO = "导入分两步：先上传预览，逐行核对无误后再确认入库。被拦下的行会标明行号与原因，其余行照常导入，不会整批失败。"
+IMPORT_COLUMNS_TITLE = "每一列写什么"
+IMPORT_EXAMPLE_TITLE = "可直接复制的示例"
+IMPORT_EXAMPLE_CSV = "CSV 示例（表头 + 三行）"
+IMPORT_EXAMPLE_JSONL = "JSONL 示例（一行一道题）"
+IMPORT_PROMPT_TITLE = "让 AI 帮你把图片变成题目"
+IMPORT_PROMPT_HOW = ("把下面这段提示词连同题目图片一起交给大模型，把它输出的整段文本粘贴回本页的「粘贴文本」框即可。识别结果不会直接入库，仍要经过逐行校验与你的确认。")
+IMPORT_PASTE_LABEL = "粘贴模型输出的 JSONL 文本"
+IMPORT_PASTE_BUTTON = "预览粘贴的内容"
+IMPORT_TEMPLATE_BUTTON = "下载 CSV 模板文件"
+IMPORT_TEMPLATE_JSONL_BUTTON = "下载 JSONL 模板文件"
+IMPORT_IMAGE_NOTE = "图片类题目暂不支持批量导入：请先用占位文本导入题目正文，导入后在题目详情页手动补图。"
+IMPORT_NO_FILE = "请先选择一个文件。"
+IMPORT_TOO_LARGE = "文件超出大小限制（单个最大 2 MB），请拆分后再导入。"
+IMPORT_TARGET_LABEL = "导入对象"
+IMPORT_FORMAT_LABEL = "文件格式"
+IMPORT_FILE_LABEL = "选择文件"
+IMPORT_PREVIEW_BUTTON = "上传并预览"
+IMPORT_COPY_HINT = "点右侧按钮可复制"
+IMPORT_COPY_BUTTON = "复制"
+IMPORT_COPIED = "已复制到剪贴板"
+IMPORT_PASTE_PLACEHOLDER = "一行一道题，例如：{\"type\":\"essay\",\"subject\":\"数学\",\"stem\":\"...\",\"options\":[],\"answer\":{\"text\":\"...\"},\"explanation\":\"\",\"knowledge_points\":[\"...\"]}"

@@ -101,7 +101,8 @@ def test_jsonl_keeps_the_answer_verbatim(db):
 
 
 def test_empty_file_and_bad_json_are_reported_not_raised(db):
-    assert import_service.preview(db, "question", "csv", "")["blocked"][0].errors == ["这个文件是空的。"]
+    assert import_service.preview(db, "question", "csv", "")["blocked"][0].errors == [
+        prompts.IMPORT_EMPTY_FILE]
     blocked = import_service.preview(db, "question", "jsonl", "这行不是 JSON")["blocked"]
     assert "合法 JSON" in blocked[0].errors[0]
 

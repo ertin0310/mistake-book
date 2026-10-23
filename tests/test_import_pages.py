@@ -60,14 +60,14 @@ def test_import_page_requires_login(client):
 def test_sidebar_opens_the_page(client):
     sign_up(client, username="stu")
     body = client.get("/import/").get_data(as_text=True)
-    assert "批量导入" in body and "先预览" in body and "/import/" in body   # 侧边栏那条链接已点亮
+    assert "批量导入" in body and "上传并预览" in body and "/import/" in body
 
 
 def test_no_file_is_reported_not_crashed(client):
     sign_up(client, username="stu")
     response = client.post("/import/", data={"target": "question", "format": "csv",
                                              "csrf_token": csrf_token(client, "/import/")})
-    assert "先选一个文件" in response.get_data(as_text=True)
+    assert "请先选择一个文件" in response.get_data(as_text=True)
 
 
 def test_post_without_token_is_refused(client):
@@ -101,7 +101,7 @@ def test_missing_point_is_listed_then_created_with_the_checkbox(client, db):
     sign_up(client, username="stu")
     uid = uid_of(db, "stu")
     body = upload(client, csv_text([essay_row(1, points="冲量定理")]))
-    assert "冲量定理" in body and "库里还没有" in body
+    assert "冲量定理" in body and "系统中尚无" in body
     assert 'name="create_missing"' in body      # 勾确实摆在页面上
     confirm(client, body, create_missing=True)
     assert KnowledgeRepo(db, uid).find_usable(1, "冲量定理") is not None
@@ -136,6 +136,40 @@ def test_knowledge_point_target_imports_names(client, db):
     assert "被拦下 1 行" in plain(body)
     confirm(client, body)
     assert KnowledgeRepo(db, uid_of(db, "stu")).find_usable(1, "泰勒公式") is not None
+
+
+def test_the_page_carries_the_column_docs_and_examples(client):
+    """★ 用户看不见仓库，所以列说明、示例、AI 提示词必须摆在页面上。"""
+    sign_up(client, username="stu")
+    body = client.get("/import/").get_data(as_text=True)
+    assert "每一列写什么" in body and "<code>knowledge_points</code>" in body
+    assert "type,subject,stem,options,answer,explanation,knowledge_points" in body   # 可复制表头
+    assert "让 AI 帮你把图片变成题目" in body and "粘贴文本" in body
+    assert "图片类题目暂不支持批量导入" in body
+
+
+def test_template_download_is_gated(client):
+    assert client.get("/import/template/csv").status_code == 302      # 没登录不给下
+    sign_up(client, username="stu")
+    response = client.get("/import/template/csv")
+    assert response.status_code == 200
+    assert "attachment" in response.headers["Content-Disposition"]
+    assert client.get("/import/template/不存在").status_code == 404
+
+
+def test_pasted_text_goes_through_the_same_validation(client):
+    """粘贴通道与上传文件同等待遇：坏行照样报行号，好行才进得了库。"""
+    sign_up(client, username="stu")
+    good = ('{"type":"essay","subject":"数学","stem":"粘贴进来的题","options":[],'
+            '"answer":{"text":"答"},"explanation":"","knowledge_points":""}')
+    body = client.post("/import/paste", data={"text": good + chr(10) + "这行不是 JSON",
+                                              "csrf_token": csrf_token(client, "/import/")}
+                       ).get_data(as_text=True)
+    assert "可以通过 1 行" in plain(body) and "被拦下 1 行" in plain(body)
+    assert "不是合法 JSON" in body
+    assert client.post("/import/paste", data={"text": "",
+                                              "csrf_token": csrf_token(client, "/import/")}
+                       ).status_code == 200
 
 
 def test_undecodable_bytes_get_a_chinese_hint(client):

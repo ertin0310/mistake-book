@@ -3,49 +3,87 @@
 {% block content %}
 <section class="card">
   <h1>批量导入</h1>
-  <p class="muted">表头照仓库里 <code>import-templates/示例题目.csv</code> 抄就行；
-     不知道行错在哪，先传 <code>示例题目-有脏行.csv</code> 看看这张表怎么报到行号。</p>
+  <p>{{ prompts.IMPORT_LEAD }}</p>
+  <p class="muted">{{ prompts.IMPORT_HOWTO }}</p>
   {% if error %}<p class="notice danger">{{ error }}</p>{% endif %}
 
   <form method="post" action="{{ url_for('importer.upload') }}" enctype="multipart/form-data" class="stack">
     {{ csrf_input() | safe }}
-    <label>导入什么
+    <label>{{ prompts.IMPORT_TARGET_LABEL }}
       <select name="target">
         {% for key, spec in targets.items() %}<option value="{{ key }}">{{ spec.label }}</option>{% endfor %}
       </select>
     </label>
-    <label>文件格式
+    <label>{{ prompts.IMPORT_FORMAT_LABEL }}
       <select name="format">
         {% for fmt in formats %}<option value="{{ fmt }}">{{ fmt|upper }}</option>{% endfor %}
       </select>
     </label>
-    <label>选文件（CSV 给人改，JSONL 给机器写）
+    <label>{{ prompts.IMPORT_FILE_LABEL }}
       <input type="file" name="file" accept=".csv,.jsonl,.txt" required>
     </label>
-    <button class="primary">先预览</button>
+    <div class="row">
+      <button class="primary">{{ prompts.IMPORT_PREVIEW_BUTTON }}</button>
+      <a class="muted" href="{{ url_for('importer.template', kind='csv') }}">{{ prompts.IMPORT_TEMPLATE_BUTTON }}</a>
+      <a class="muted" href="{{ url_for('importer.template', kind='jsonl') }}">{{ prompts.IMPORT_TEMPLATE_JSONL_BUTTON }}</a>
+    </div>
   </form>
+</section>
 
-  {% if pending %}
-  <hr class="rule">
-  <h3>上次预览完还没确认的批次</h3>
+<section class="card">
+  <h2>{{ prompts.IMPORT_COLUMNS_TITLE }}</h2>
+  <table>
+    <tr><th>列名</th><th>名称</th><th>写法</th></tr>
+    {% for key, label, hint in column_docs %}
+    <tr><td><code>{{ key }}</code></td><td>{{ label }}</td><td class="muted">{{ hint }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="foot muted">{{ prompts.IMPORT_IMAGE_NOTE }}</p>
+</section>
+
+<section class="card">
+  <h2>{{ prompts.IMPORT_EXAMPLE_TITLE }}</h2>
+  <p class="muted small">{{ prompts.IMPORT_COPY_HINT }}</p>
+  <h3>{{ prompts.IMPORT_EXAMPLE_CSV }}</h3>
+  <textarea class="sample" rows="5" readonly>{{ example_csv }}</textarea>
+  <h3>{{ prompts.IMPORT_EXAMPLE_JSONL }}</h3>
+  <textarea class="sample" rows="3" readonly>{{ example_jsonl }}</textarea>
+</section>
+
+<section class="card">
+  <h2>{{ prompts.IMPORT_PROMPT_TITLE }}</h2>
+  <p class="muted">{{ prompts.IMPORT_PROMPT_HOW }}</p>
+  <textarea class="sample" rows="12" readonly>{{ ai_prompt }}</textarea>
+  <form method="post" action="{{ url_for('importer.paste') }}" class="stack">
+    {{ csrf_input() | safe }}
+    <label>{{ prompts.IMPORT_PASTE_LABEL }}
+      <textarea name="text" rows="6" placeholder="{{ prompts.IMPORT_PASTE_PLACEHOLDER }}"></textarea>
+    </label>
+    <button class="primary">{{ prompts.IMPORT_PASTE_BUTTON }}</button>
+  </form>
+</section>
+
+{% if pending %}
+<section class="card">
+  <h2>上次预览完成、尚未确认的批次</h2>
   {% for batch in pending %}
   <form method="post" action="{{ url_for('importer.confirm') }}" class="row">
     {{ csrf_input() | safe }}
     <input type="hidden" name="session_id" value="{{ batch.id }}">
     <span class="muted">{{ batch.source_filename }} · {{ batch.created_at }}</span>
-    <button>直接确认这批</button>
+    <button>确认导入</button>
   </form>
   {% endfor %}
-  {% endif %}
+</section>
+{% endif %}
 
-  {% if result %}
-  <hr class="rule">
-  <h3>预览结果</h3>
+{% if result %}
+<section class="card">
+  <h2>预览结果</h2>
   <p>共 {{ result.rows|length }} 行：可以通过 <strong>{{ result.ok|length }}</strong> 行，
      被拦下 <strong>{{ result.blocked|length }}</strong> 行。
      {% if result.fixes %}<span class="muted">已自动修正 {{ result.fixes }} 处排版问题（中文引号、代码围栏、换行符）。</span>{% endif %}
   </p>
-
   {% if result.blocked %}
   <table>
     <tr><th class="n">行号</th><th>原因</th></tr>
@@ -54,27 +92,24 @@
     {% endfor %}
   </table>
   {% endif %}
-
   {% if result.missing %}
-    <p class="notice warning">
-      这些知识点库里还没有：
-      {% for item in result.missing %}{{ item.name }}{% if not loop.last %}、{% endif %}{% endfor %}。
-    </p>
+  <p class="notice warning">以下知识点系统中尚无：
+    {% for item in result.missing %}{{ item.name }}{% if not loop.last %}、{% endif %}{% endfor %}。
+  </p>
   {% endif %}
-
   {% if result.ok %}
   <form method="post" action="{{ url_for('importer.confirm') }}" class="stack">
     {{ csrf_input() | safe }}
     <input type="hidden" name="session_id" value="{{ result.session_id }}">
     {% if result.missing %}
     <label class="check"><input type="checkbox" name="create_missing" value="1">
-      顺手一起建了（在同一个事务里先建知识点再建题）</label>
+      同时创建上述知识点（在同一事务内先建知识点再建题）</label>
     {% endif %}
-    <button class="primary">确认导入这 {{ result.ok|length }} 行</button>
+    <button class="primary">确认导入 {{ result.ok|length }} 行</button>
   </form>
   {% else %}
-    <p class="empty">{{ prompts.EMPTY_IMPORT }}</p>
-  {% endif %}
+  <p class="empty">{{ prompts.EMPTY_IMPORT }}</p>
   {% endif %}
 </section>
+{% endif %}
 {% endblock %}
