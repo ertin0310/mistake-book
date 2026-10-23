@@ -23,18 +23,30 @@
       {% endfor %}
     </nav>
 
-    <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
-      {{ csrf_input() | safe }}
-      <span class="muted">{{ username }}</span>
-      <button>退出</button>
-    </form>
+    {# 账户那一组收进右上角：名字 + 倒三角，点开才有内容（侧边栏留给真正的功能） #}
+    <details class="account">
+      <summary><span class="who">{{ username }}</span><span class="caret">▾</span></summary>
+      <ul>
+        {% for item in account_items %}
+        <li class="{{ 'active' if is_active(item, request.path) }}">
+          <a href="{{ item.url }}">{{ item.label }}</a>
+        </li>
+        {% endfor %}
+        <li>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="inlineform">
+            {{ csrf_input() | safe }}
+            <button class="link">退出登录</button>
+          </form>
+        </li>
+      </ul>
+    </details>
   </header>
 
   <div class="layout">
     <aside class="sidebar">
       {# 模板只写循环渲染（方案二-9）：加页面 = 蓝图挂路由 + config/menu.py 加一行，
          这里不动，也不写 `if admin` 这种散判。 #}
-      {% for group, items in menu_groups %}
+      {% for group, items in menu_groups if group != account_group %}
       <section class="menu-group">
         <h2>{{ group }}</h2>
         {% if items %}

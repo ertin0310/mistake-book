@@ -25,11 +25,14 @@ class MenuItem:
 
 
 # 侧边栏从上到下的分组顺序。空组也要出现（见 `menu_groups`）。
-GROUP_ORDER: tuple[str, ...] = ("学习", "复习", "账户", "管理")
+GROUP_ORDER: tuple[str, ...] = ("学习", "录入", "复习", "管理")
 
 # 哪些组是"模式专属"的：切到复习模式就不该再看见学习组那一栏（哪怕它是空的），
 # 否则两行"这里还没有能用的功能"同时挂着，等于没告诉用户切换有没有生效。
 GROUP_MODE = {"学习": "study", "复习": "review"}
+
+# 右上角那个账号菜单（不在侧边栏里）：首页、设置、申诉与反馈都收在名字旁边。
+ACCOUNT_GROUP = "账户"
 
 # 点顶栏「学习」「复习」两颗按钮各自落到哪儿：模式切换之后停在**该模式的主页**，
 # 而不是停在原来那一页——否则切了模式页面没变，用户以为开关没生效。
@@ -64,11 +67,11 @@ MENU = [
     MenuItem("home", "账户", "首页", "/", mode="both", icon="home"),
     # 「导入」是一个可展开的入口：点它默认进手动录题，展开后是手动 / CSV 两条路。
     # 挂在账户组是因为它**两种模式都要能用**——复习模式也得能录题（他 2026-10-23 指出）。
-    MenuItem("import", "账户", "导入", "/study/new", mode="both", icon="upload",
+    MenuItem("import", "录入", "导入", "/study/new", mode="both", icon="upload",
              visible=True),
-    MenuItem("study_new", "账户", "手动录题", "/study/new", mode="both", icon="pen",
+    MenuItem("study_new", "录入", "手动录题", "/study/new", mode="both", icon="pen",
              parent="import", prefix="/study/new", visible=True),
-    MenuItem("import_csv", "账户", "CSV 录题", "/import/", mode="both", icon="upload",
+    MenuItem("import_csv", "录入", "CSV 录题", "/import/", mode="both", icon="upload",
              parent="import", prefix="/import", visible=True),
     MenuItem("settings", "账户", "设置", "/settings/", mode="both", icon="gear",
              prefix="/settings", visible=True),
@@ -101,6 +104,11 @@ def visible_menu(mode: str, role: str) -> list[MenuItem]:
 def children_of(key: str, items: list[MenuItem]) -> list[MenuItem]:
     """某条父项下面的子项（侧边栏展开用）。"""
     return [item for item in items if item.parent == key]
+
+
+def account_items(mode: str, role: str) -> list[MenuItem]:
+    """右上角那几条：账户组的全部条目。"""
+    return [item for item in visible_menu(mode, role) if item.group == ACCOUNT_GROUP]
 
 
 def kids_active(kids: list[MenuItem], path: str) -> bool:

@@ -89,6 +89,8 @@ def _register_template_globals(app: Flask) -> None:
             "mode": mode,
             "mode_labels": prompts.MODE_LABELS,
             "menu_groups": menu.menu_groups(mode, role),
+            "account_items": menu.account_items(mode, role),
+            "account_group": menu.ACCOUNT_GROUP,
             "is_active": menu.is_active,
             "top_level": menu.top_level,
             "children_of": menu.children_of,
