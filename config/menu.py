@@ -52,7 +52,7 @@ MENU = [
     MenuItem("stats", "复习", "统计", "/review/stats", mode="review", icon="chart",
              visible=False),
     MenuItem("trash", "复习", "回收站", "/review/trash", mode="review", icon="trash",
-             visible=False),
+             visible=True),
 
     # ---------------------------------------------------------- 账户（两种模式都显示）
     MenuItem("home", "账户", "首页", "/", mode="both", icon="home"),

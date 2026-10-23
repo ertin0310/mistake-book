@@ -15,7 +15,7 @@ import sqlite3
 from config import settings
 from src.data.repository.base import SCOPE_NAMED, BaseRepo
 
-MINE = "user_id = :viewer AND deleted_at IS NULL"
+MINE = "user_id = :viewer AND deleted_at IS NULL AND delisted_by IS NULL"
 SHARED_POOL = ("deleted_at IS NULL AND delisted_by IS NULL AND visibility = 'shared'"
                " AND (user_id IS NULL OR user_id <> :viewer)")
 

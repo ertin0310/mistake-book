@@ -56,6 +56,7 @@ RESTORE_CONFLICT = {
     "tag": "你已经有一个同名标签了，还原会重复。",
     "knowledge_point": "这个知识点已经存在，请直接选用。",
     "subject": "科目名已经占用，请先改一个再还原。",
+    "question": "这道题你已经有一份了，不用重复还原。",
 }
 
 KNOWLEDGE_DUPLICATE_HINT = "已经有了，请直接选用。"

@@ -95,8 +95,8 @@ def test_list_pages_at_twenty_and_falls_back(db):
         question_service.create(db, 1, essay_form(stem=f"第 {n} 题"))
     db.commit()
     first = question_service.mine(db, 1, page=1)
-    # fixture 里 u1 本来就有 3 道未删的题，所以是 25 + 3
-    assert (first.total, first.total_pages, len(first.items)) == (28, 2, 20)
+    # fixture 里 u1 有 3 道未删的题，但其中"题干 3"被官方收起 → mine 读法也看不见它
+    assert (first.total, first.total_pages, len(first.items)) == (27, 2, 20)
     assert question_service.mine(db, 1, page=999).page == 2
 
 

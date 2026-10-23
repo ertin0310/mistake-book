@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}回收站{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>回收站</h1>
+  <p class="muted">这里只放<strong>你自己删掉</strong>的东西，保留 {{ trash.retention_days }} 天。
+    今天：{{ trash.today }}</p>
+
+  {% for group in trash.groups %}
+    <h3>{{ group.label }}{% if group.rows %}（{{ group.rows|length }}）{% endif %}</h3>
+    {% if group.rows %}
+    <table>
+      <tr><th>内容</th><th>删除日期</th><th class="n">操作</th></tr>
+      {% for item in group.rows %}
+      <tr>
+        <td>{{ item.title }}{% if item.title|length >= 60 %}…{% endif %}</td>
+        <td class="muted">{{ item.deleted_at }}</td>
+        <td class="n">
+          <form method="post" action="{{ url_for('review.restore_from_trash') }}" class="inlineform">
+            {{ csrf_input() | safe }}
+            <input type="hidden" name="entity" value="{{ group.key }}">
+            <input type="hidden" name="row_id" value="{{ item.id }}">
+            <button class="link">还原</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+      <p class="muted small">没有删过的{{ group.label }}。</p>
+    {% endif %}
+  {% endfor %}
+
+  {% if trash.expired %}
+    <p class="foot muted">{{ prompts.PURGED_NOTE.format(count=trash.expired) }}</p>
+  {% endif %}
+</section>
+{% endblock %}

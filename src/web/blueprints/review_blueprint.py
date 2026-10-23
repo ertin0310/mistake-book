@@ -14,7 +14,8 @@ from config import prompts
 from src.data.repository.base import Page
 from src.data.repository.mistake_repo import MistakeRepo
 from src.domain.errors import ValidationError
-from src.services import question_service, review_service
+from src.domain.errors import RestoreConflictError
+from src.services import question_service, review_service, trash_service
 from src.web import csrf, decorators
 
 bp = Blueprint("review", __name__, url_prefix="/review")
@@ -32,6 +33,31 @@ def today():
                     total=queue["total"], total_pages=queue["pages"])
     return render_template("review/today.html", queue=queue, page_obj=page_obj,
                            first=queue["rows"][0]["id"] if queue["rows"] else None)
+
+
+@bp.get("/trash")
+@decorators.require_login
+def trash():
+    """回收站：只看自己扔进去的。还原撞名字时贴一句提示回本页，不弹错误页。"""
+    return render_template("review/trash.html",
+                           trash=trash_service.listing(g.conn, decorators.current_user_id()))
+
+
+@bp.post("/trash/restore")
+@decorators.require_login
+def restore_from_trash():
+    _require_token()
+    entity = request.form.get("entity", "")
+    row_id = request.form.get("row_id", type=int)
+    try:
+        trash_service.restore(g.conn, decorators.current_user_id(), entity, row_id)
+    except RestoreConflictError as exc:
+        flash(exc.message, "warning")
+        return redirect(url_for("review.trash"))
+    except ValidationError as exc:
+        abort(404, description=exc.message)
+    flash("已经放回原处了。", "success")
+    return redirect(url_for("review.trash"))
 
 
 @bp.get("/card/<int:mistake_id>")
