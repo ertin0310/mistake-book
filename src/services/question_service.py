@@ -14,8 +14,31 @@ from src.services import review_service, subject_service
 
 
 def available_types() -> list[tuple[str, str]]:
-    """录题页可选的题型。本期只有简答，选择/填空留到步 21。"""
+    """录题页可选的题型：简答、选择、填空三个，全部从注册表来。"""
     return [(name, registry.get(name).label) for name in registry.known()]
+
+
+def options_widget(type_name: str, value: str = "", place: str = "form") -> str:
+    """选项录入框。只有选择题返回内容，其余题型返回空串——模板因此不必判题型。"""
+    return registry.get(type_name).render_options(place, value)
+
+
+def options_of(row) -> list:
+    """这道题的选项列表（练习页、复习页、详情页共用一份读法）。"""
+    try:
+        data = json.loads(row["options_json"] or "[]")
+    except ValueError:
+        return []
+    return [str(item) for item in data] if isinstance(data, list) else []
+
+
+def grade(row, submitted: str):
+    """机器判分。返回 None 表示这个题型判不了（简答题），由人自评接管。"""
+    return registry.get(row["type"]).grade(row["answer_json"], submitted)
+
+
+def auto_gradable(row) -> bool:
+    return registry.get(row["type"]).auto_gradable
 
 
 def new_errors(conn, form: dict) -> list[str]:
@@ -62,9 +85,19 @@ def answer_text(answer_json: str) -> str:
 
 
 def next_to_practice(conn, user_id: int):
-    """学习模式取下一道练习题（自己的，按录入顺序）。"""
-    page = QuestionRepo(conn, user_id).mine(page=1, size=1)
-    return page.items[0] if page.items else None
+    """下一道练习题：先挑今天还没做过的，都做完了就回到最早那道。
+
+    ★ 原来写的是"取列表第一道"，于是练习页永远只出同一道题——
+      做十遍也不会变，用户只会以为这功能没做完。
+    """
+    rows = QuestionRepo(conn, user_id).mine_all()        # 已按 id 升序
+    if not rows:
+        return None
+    done = review_service.attempted_today(conn, user_id)
+    for row in rows:
+        if row["id"] not in done:
+            return row
+    return rows[0]
 
 
 def practice_row(conn, user_id: int, question_id: int):
@@ -73,11 +106,24 @@ def practice_row(conn, user_id: int, question_id: int):
     return page.items[0] if page.items else None
 
 
-def record_practice(conn, user_id: int, row, result: str, submitted: str = "") -> None:
-    """记一笔做题结果；`result='wrong'` 由复习服务负责把题排进今日队列（闭环那一环）。"""
-    if result not in ("right", "wrong"):
+def record_practice(conn, user_id: int, row, result: str, submitted: str = "") -> dict:
+    """记一笔做题结果；`wrong` 由复习服务负责把题排进今日队列（闭环那一环）。
+
+    ★ 选择、填空这两个题型**机器判**：按钮只表示"我要对答案"，
+      对错的结论来自 `grade()`，不来自用户自己点哪个——自己点"做对了"就判对，
+      那错题本永远不会收进真正做错的题。简答题没有标准答案可比，仍按用户点的记，
+      `grade_source` 因此区分 `auto` 与 `manual`（词表与 schema 的 CHECK 一致）。
+    """
+    verdict = grade(row, submitted) if auto_gradable(row) else None
+    if verdict is not None:
+        result, source = ("right" if verdict["right"] else "wrong"), "auto"
+    elif result not in ("right", "wrong"):
         raise ValidationError(prompts.FIELD_REQUIRED)
-    review_service.record_attempt(conn, user_id, row["id"], row["subject_id"], result, submitted)
+    else:
+        source = "manual"
+    review_service.record_attempt(conn, user_id, row["id"], row["subject_id"], result,
+                                  submitted, grade_source=source)
+    return {"result": result, "source": source, "verdict": verdict}
 
 
 def mine(conn, user_id: int, page: int = 1, subject_id=None):

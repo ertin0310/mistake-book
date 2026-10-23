@@ -42,6 +42,14 @@ class MistakeRepo(BaseRepo):
             "SELECT * FROM mistake WHERE user_id=:viewer AND question_id=:q"
             " AND deleted_at IS NULL", {"viewer": self.viewer_id, "q": question_id}).fetchone()
 
+    def retire(self, mistake_id: int, user_id: int) -> None:
+        """软删一条错题（改判收回、用户自己放弃都走它）：打 `deleted_at` + `deleted_by`。"""
+        self.conn.execute(
+            "UPDATE mistake SET deleted_at=datetime('now','localtime'), deleted_by=:who,"
+            " updated_at=datetime('now','localtime') WHERE id=:id AND user_id=:who",
+            {"who": user_id, "id": mistake_id})
+        self.conn.commit()
+
     def add(self, question_id: int, due_date, entry_reason: str = "marked_wrong") -> int:
         params = dict(DEFAULTS, question_id=question_id, user_id=self.viewer_id,
                       due_date=clock.to_date_str(due_date))

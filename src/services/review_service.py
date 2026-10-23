@@ -10,7 +10,7 @@ from config import prompts, schedule
 from src.data.repository.mistake_repo import MistakeRepo
 from src.data.repository.study_attempt_repo import ReviewLogRepo, StudyAttemptRepo
 from src.data.repository.profile_repo import SettingRepo
-from src.domain import clock
+from src.domain import clock, grading
 from src.domain.errors import ValidationError
 from src.domain.scheduling import registry
 from src.domain.scheduling.base import ReviewState
@@ -77,14 +77,48 @@ def rate(conn, user_id: int, mistake_id: int, rating: int, duration_seconds: int
     return {"move": move, "next_due": move.after.due_date}
 
 
+def attempted_today(conn, user_id: int) -> set:
+    """今天已经做过的题号，练习页靠它轮换。"""
+    review_date = clock.review_date_of(_rollover(conn, user_id))
+    return StudyAttemptRepo(conn, user_id).attempted_on(review_date)
+
+
+def duration_preselect(conn, user_id: int, subject_id: int, seconds: int):
+    """耗时 → 默认预选档位（三-2）。返回 `(档位或 None, 该科中位数秒数)`。
+
+    ★ 只决定页面上**默认选中哪一档**，绝不自动提交：自动提交等于替用户撒谎，
+      而且一次挂机就能把整条复习曲线带偏。样本不足 `DURATION_MIN_SAMPLES` 条不预选。
+    """
+    history = ReviewLogRepo(conn, user_id).durations_for_subject(subject_id)
+    return grading.preselect_rating(seconds, history)
+
+
+def retract_wrong(conn, user_id: int, mistake_id: int) -> bool:
+    """改判「我其实答对了」：收回那道**自动入队且还没复习过**的错题（三-13）。
+
+    ★ 两个条件缺一不可：复习过的（`review_count>0`）说明进度是真的，收了就丢历史；
+      手动加进来的（`entry_reason != 'marked_wrong'`）是用户自己要排的，不该由这个按钮收。
+      收 = 软删（进回收站），不物理删——`review_log.mistake_id` 还指着它。
+    """
+    repo = MistakeRepo(conn, user_id)
+    row = repo.get(mistake_id)
+    if row is None:
+        raise ValidationError(prompts.NOT_FOUND)
+    if int(row["review_count"] or 0) > 0 or row["entry_reason"] != "marked_wrong":
+        return False
+    repo.retire(mistake_id, user_id)
+    return True
+
+
 def record_attempt(conn, user_id: int, question_id: int, subject_id: int, result: str,
-                   submitted: str = "") -> int | None:
+                   submitted: str = "", grade_source: str = "manual") -> int | None:
     """学习模式记一笔做题结果；**做错 → 当场进复习队列**（方案三-13 的闭环那一环）。
 
     已有活跃错题时**不重置台阶、不记 lapse**：进度只由复习自评驱动，
     再错一次不该把人家爬到第 6 级的成果清零。
     """
-    StudyAttemptRepo(conn, user_id).record(question_id, subject_id, result, submitted)
+    StudyAttemptRepo(conn, user_id).record(question_id, subject_id, result, submitted,
+                                           grade_source=grade_source)
     if result != "wrong":
         return None
     repo = MistakeRepo(conn, user_id)

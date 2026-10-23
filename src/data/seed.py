@@ -624,6 +624,18 @@ def _write_sample_files() -> None:
          "stem": "说明 seen 与 seeing 作状语的差别。", "options": [],
          "answer": {"text": "seen 表被动或完成，seeing 表主动或进行，判断依据是与主语的逻辑关系。"},
          "explanation": "非谓语的核心是先找逻辑主语。"},
+        # ↓ 步 21 之后选择与填空也能导了，样例补上这两行：它们同时是判分口径的活标本
+        {"subject": "数学", "knowledge_points": ["级数收敛", "函数连续性"], "type": "choice",
+         "stem": "设级数 ∑aₙ 收敛，下列结论一定正确的是（　）",
+         "options": ["通项 aₙ 必趋于 0", "加括号后的级数仍收敛到同一和",
+                     "通项趋于 0 则级数必收敛", "绝对收敛必条件收敛，二者不是一回事"],
+         "answer": {"letters": "ABC"},
+         "explanation": "多选。选项里带中文逗号与下标，答案写成三个字母连着，验证转义不丢字。"},
+        {"subject": "数学", "knowledge_points": ["函数连续性", "级数收敛"], "type": "blank",
+         "stem": "|x| 在 x=0 处__，在该点__；∑(1/2)^n（n 从 1 起）的和是__。",
+         "options": [], "answer": [["连续", "continues"], ["不可导"], ["1"]],
+         "explanation": "第一空给两种可接受写法（竖线），第三空答案是 1 而题干里有 1/2——"
+                        "斜杠永远不参与切分，否则填 1 会被判错、填 1/2 会被判对两个空。"},
     ]
     settings.IMPORT_TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
     settings.SAMPLE_JSONL_PATH.write_text(
@@ -633,7 +645,7 @@ def _write_sample_files() -> None:
     _write_csv(settings.SAMPLE_CSV_PATH, rows)
     dirty = [dict(rows[0]), dict(rows[1]), dict(rows[2]),
              {**rows[3], "stem": "", "answer": {"text": ""}},          # 必填为空
-             {**rows[0], "type": "choice"},                            # 题型还没实现
+             {**rows[0], "type": "judge"},                             # 还没实现的题型
              {"subject": "物理", "knowledge_points": [], "type": "essay",
               "stem": "科目不在可用列表里", "options": [], "answer": {"text": "答"}}]
     _write_csv(settings.SAMPLE_DIRTY_CSV_PATH, dirty)
@@ -650,9 +662,21 @@ def _write_csv(path, rows) -> None:
 
 
 def _sample_cell(row, column):
+    """CSV 是给人改的那条通道：这一格写"人手能写出来的样子"，不写 JSON。
+
+    ★ 与 JSONL 那条通道进去的是同一道题，库里出来的必须一模一样
+      （`tests/test_csv_parity.py` 就是钉这件事的）。
+    """
     value = row.get(column, "")
     if column == "knowledge_points":
         return ";".join(value)
+    if column == "options":
+        return "\n".join(value)                       # 一行一个选项，顺序就是 A、B、C…
+    if column == "answer" and row.get("type") == "blank":
+        return "\n".join("|".join(item if isinstance(item, list) else [item])   # 一行一个空
+                         for item in value)
+    if column == "answer" and isinstance(value, dict):
+        return value.get("letters") or value.get("text") or ""      # 选择写字母，简答写整段
     if isinstance(value, (list, dict)):
         return json.dumps(value, ensure_ascii=False)      # 单元格里的 JSON 由 csv 模块负责转义
     return value

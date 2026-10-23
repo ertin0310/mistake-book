@@ -85,7 +85,9 @@ def _validate_question_row(conn, data: dict, row) -> None:
     handler = types_registry.get(data["type"])
     options_json, answer_json = handler.parse(
         {"options": data.get("options", ""), "answer": data["answer"]})
-    row.errors.extend(handler.validate({"stem": data["stem"], "answer": data["answer"]}))
+    # 校验拿的是**整行**（选择题要看 options），与录题表单同一个入参形状，
+    # 免得"录题能过、导入不能过"这种两套规则漂移
+    row.errors.extend(handler.validate(data))
     row.payload = dict(data, subject_id=subject_id, options_json=options_json,
                        answer_json=answer_json, points=_split_points(data.get("knowledge_points", "")))
 

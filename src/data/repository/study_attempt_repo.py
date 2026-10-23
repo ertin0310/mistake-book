@@ -21,6 +21,13 @@ class StudyAttemptRepo(BaseRepo):
     table = "study_attempt"
     scope = SCOPE_USER
 
+    def attempted_on(self, review_date) -> set:
+        """今天已经做过的题号。练习页靠它轮换，不会逮着一道题反复出。"""
+        rows = self.conn.execute(
+            "SELECT question_id FROM study_attempt WHERE user_id=:viewer AND recorded_on=:on",
+            {"viewer": self.viewer_id, "on": clock.to_date_str(review_date)}).fetchall()
+        return {row["question_id"] for row in rows}
+
     def record(self, question_id: int, subject_id: int, result: str,
                submitted: str = "", grade_source: str = "manual") -> int:
         if result not in RESULTS:
@@ -63,6 +70,21 @@ class ReviewLogRepo(BaseRepo):
              "sb": before.step_index, "sa": after.step_index})
         self.conn.commit()
         return int(cursor.lastrowid)
+
+    def durations_for_subject(self, subject_id: int, limit: int = 200) -> list:
+        """这一科历史复习耗时（秒）。耗时预选的中位数就从这里算。
+
+        ★ 只取这个人自己的流水（`user_id` 在 where 里写死），别人的速度不该影响我的预选；
+          题被删了也不影响——流水是历史事实，join 不上就少一条样本，不报错。
+        """
+        rows = self.conn.execute(
+            "SELECT log.duration_seconds AS seconds FROM review_log log"
+            " JOIN mistake m ON m.id = log.mistake_id"
+            " JOIN question_bank q ON q.id = m.question_id"
+            " WHERE log.user_id=:viewer AND q.subject_id=:subject AND log.duration_seconds > 0"
+            " ORDER BY log.id DESC LIMIT :limit",
+            {"viewer": self.viewer_id, "subject": int(subject_id), "limit": int(limit)}).fetchall()
+        return [row["seconds"] for row in rows]
 
     def count_today(self, review_date) -> int:
         return int(self.conn.execute(

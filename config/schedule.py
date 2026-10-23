@@ -35,6 +35,17 @@ DURATION_RATIO_BANDS = [(0.6, 1), (1.2, 2), (2.0, 3), (None, 4)]
 # 离群点裁剪：单次耗时超过这个秒数就按上限记，避免一次挂机把整科中位数拖飞。
 DURATION_CAP_SECONDS = 1800
 
+# 历史流水不足这么多条就**不做耗时预选**：拿三条样本算出来的"中位数"是噪声，
+# 用它替用户选档位比不选更糟。
+DURATION_MIN_SAMPLES = 10
+
+# 填空题判分口径（三-2）：三条都放配置，改口径不碰代码。
+BLANK_ORDER_MATTERS = True      # False = 只要求"填进去的答案集合"与标准答案集合一致
+BLANK_PARTIAL_CREDIT = True     # False = 有一空不对就整题算错
+# 判分时忽略的东西：大小写、全半角、空格。标点不忽略（"1, 2" 与 "12" 是两回事）。
+BLANK_IGNORE_CASE = True
+BLANK_IGNORE_SPACES = True
+
 # 掌握度分布的四格：区间左闭右开，按 mistake.step_index 分。
 MASTERY_BANDS = [
     ("not_started", "没开始", 0, 1),

@@ -27,7 +27,7 @@ def test_hundred_rows_with_three_dirty_ones_report_line_numbers(db):
     rows = [good_row(n) for n in range(1, 101)]
     rows[6] = "essay,数学,,[],{\"text\":\"答案\"},,"                  # 第 8 行：题干空
     rows[41] = "essay,数学,只有两列"                                   # 第 43 行：列数不符
-    rows[87] = "choice,数学,题干,[],{\"letters\":\"A\"},,摩擦力做功"    # 第 89 行：题型未实现
+    rows[87] = "judge,数学,题干,,对,,摩擦力做功"                       # 第 89 行：题型未实现
     result = import_service.preview(db, "question", "csv", csv_text(rows))
 
     assert len(result["rows"]) == 100
@@ -61,12 +61,33 @@ def test_csv_multiline_cell_stays_one_row(db):
     assert "光滑|无摩擦" in ok[0].payload["answer_json"]      # 竖线在简答里是普通文字
 
 
-@pytest.mark.parametrize("kind", ["blank", "choice"])
-def test_unimplemented_types_are_rejected_line_by_line(db, kind):
-    """填空与选择要到步 21，导入这儿先明确报"还不支持"，不悄悄收下。"""
-    text = COLUMNS + "\n" + f'{kind},数学,题干,[],{{"text":"答案"}},,牛顿定律'
+@pytest.mark.parametrize("kind", ["judge", "tf", "match"])
+def test_types_without_a_handler_are_rejected_line_by_line(db, kind):
+    """没登记处理器的题型明确报"还不支持"并给行号，不悄悄收下也不悄悄丢。"""
+    text = COLUMNS + "\n" + f'{kind},数学,题干,,对,,牛顿定律'
     blocked = import_service.preview(db, "question", "csv", text)["blocked"]
     assert blocked[0].line == 2 and "还不支持" in blocked[0].errors[0]
+
+
+def test_choice_and_blank_import_through_both_channels(db):
+    """步 21 之后：选择与填空能导了，而且 CSV 的简写与 JSONL 的 JSON 出来是同一份。"""
+    csv_two_blanks = COLUMNS + "\n" + 'blank,数学,两空：__、__,,"连续|光滑\n不可导",,'
+    from_csv = import_service.preview(db, "question", "csv", csv_two_blanks)["ok"][0].payload
+    line = ('{"type":"blank","subject":"数学","stem":"两空：__、__","options":[],'
+            '"answer":[["连续","光滑"],["不可导"]],"explanation":"","knowledge_points":""}')
+    from_jsonl = import_service.preview(db, "question", "jsonl", line)["ok"][0].payload
+    assert from_csv["answer_json"] == from_jsonl["answer_json"] == '[["连续","光滑"],["不可导"]]'
+
+    choice_row = COLUMNS + "\n" + 'choice,数学,选一个,"甲\n乙",B,,牛顿定律'
+    payload = import_service.preview(db, "question", "csv", choice_row)["ok"][0].payload
+    assert payload["options_json"] == '["甲","乙"]' and payload["answer_json"] == '{"letters":"B"}'
+
+    # 答案写成中文、或写了不存在的选项字母，都要报出来（S4 的"类型错误"）
+    for bad_answer in ("乙", "E"):
+        row = import_service.preview(
+            db, "question", "csv",
+            COLUMNS + "\n" + f'choice,数学,选一个,"甲\n乙",{bad_answer},,')["blocked"]
+        assert row and row[0].line == 2, bad_answer
 
 
 def test_jsonl_keeps_the_answer_verbatim(db):
@@ -160,7 +181,7 @@ def test_shipped_samples_import_cleanly(mem_db):
         text, _encoding = sanitize.decode(path.read_bytes())
         result = import_service.preview(mem_db, "question", fmt, text)
         assert [row.errors for row in result["blocked"]] == [], path.name
-        assert len(result["ok"]) == 4, path.name
+        assert len(result["ok"]) == 6, path.name   # 步 21 补了选择与填空两行
 
 
 def test_shipped_dirty_sample_reports_every_line_number(db):

@@ -139,3 +139,16 @@ AGREEMENT_DECLINE_NOTE = "不同意也可以退出，你已有的数据不会被
 AGREEMENT_ACCEPTED = "已记录你的同意。"
 AGREEMENT_GATE = "使用之前请先同意《站点协议》。"
 KP_SAME_SUBJECT_CLASH = "同一科目下同名只能有一条：请换个更具体的名字，或者到别的科目下建。"
+
+# --------------------------------------------------------------- 判分与改判（步 21）
+
+MACHINE_RIGHT = "机器判分：对了。"
+MACHINE_WRONG = "机器判分：错了。"
+MACHINE_NONE = "这道题机器判不了（简答题），你自己看着评。"
+PRESELECT_HINT = "按耗时算，这一档默认选中；觉得不对就点别的一档。"
+PRESELECT_BASELINE = "该科历史中位耗时 {seconds} 秒（样本 {count} 条）"
+PRESELECT_OFF = "这一科的复习记录还不到 {count} 条，先不按耗时预选。"
+OPTIONS_TITLE = "选项"
+RETRACT_BUTTON = "我其实答对了，收回这道错题"
+RETRACTED = "已经收回，这道题不再排进复习队列了。"
+RETRACT_REFUSED = "这道题已经复习过，或者不是自动排进来的，不能收回（历史要留着）。"

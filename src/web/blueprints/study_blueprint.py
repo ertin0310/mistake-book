@@ -62,7 +62,8 @@ def practice():
     row = question_service.next_to_practice(g.conn, decorators.current_user_id())
     if row is None:
         return render_template("study/practice.html", row=None, answer_text="")
-    return render_template("study/practice.html", row=row, revealed=False)
+    return render_template("study/practice.html", row=row, revealed=False,
+                           options=question_service.options_of(row))
 
 
 @bp.post("/practice/<int:question_id>")
@@ -72,10 +73,15 @@ def practice_result(question_id):
     row = question_service.practice_row(g.conn, decorators.current_user_id(), question_id)
     if row is None:
         abort(404, description=prompts.NOT_FOUND)
-    question_service.record_practice(g.conn, decorators.current_user_id(), row,
-                                     request.form.get("result"),
-                                     request.form.get("submitted", ""))
-    flash("记下了。做错的题今天就会出现在复习队列里。", "success")
+    outcome = question_service.record_practice(g.conn, decorators.current_user_id(), row,
+                                               request.form.get("result"),
+                                               request.form.get("submitted", ""))
+    verdict = outcome["verdict"]
+    if verdict is None:
+        flash("记下了。做错的题今天就会出现在复习队列里。", "success")
+    else:
+        flash(("机器判分：对了。" if verdict["right"] else "机器判分：错了。") + verdict["detail"],
+              "success" if verdict["right"] else "warning")
     return redirect(url_for("study.practice"))
 
 
@@ -115,9 +121,12 @@ def _require_form_token() -> None:
 def _form(form, errors, row=None):
     """答案控件由题型处理器给，录题页与复习页共用同一份（方案三-13）。"""
     current = question_service.answer_text(row["answer_json"]) if row else ""
-    widgets = {key: question_service.widget(key, "form", current)
-               for key, _ in question_service.available_types()}
+    types = question_service.available_types()
+    widgets = {key: question_service.widget(key, "form", current) for key, _ in types}
+    # 选项框只有选择题有内容，其余题型是空串——模板因此不必写 `if type == 'choice'`
+    option_widgets = {key: question_service.options_widget(key, "") for key, _ in types}
     return render_template("study/new_question.html", form=form, errors=errors,
-                           widgets=widgets, editing=row is not None, question=row,
+                           widgets=widgets, option_widgets=option_widgets,
+                           editing=row is not None, question=row,
                            subjects=subject_service.options(g.conn),
                            types=question_service.available_types())

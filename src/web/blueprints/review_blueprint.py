@@ -79,30 +79,68 @@ def card(mistake_id):
 @bp.post("/card/<int:mistake_id>/reveal")
 @decorators.require_login
 def reveal(mistake_id):
+    """看答案：机器能判的题型顺手判一次，并按耗时给出**默认预选**档位。
+
+    ★ 预选只是把某一档画成"当前选中"，提交仍由用户点（三-2）：
+      自动提交等于替用户撒谎，而且一次挂机就能把整条复习曲线带偏。
+    """
     _require_token()
     row = _own_row(mistake_id)
     seconds = _seconds(request.form.get("started"))
+    submitted = request.form.get("submitted", "")
+    question = row["question"]
+    verdict = (question_service.grade(question, submitted)
+               if question_service.auto_gradable(question) else None)
+    preselect, baseline = review_service.duration_preselect(
+        g.conn, decorators.current_user_id(), question["subject_id"], seconds)
     return render_template("review/answer.html", row=row, seconds=seconds,
                            started=request.form.get("started", ""),
-                           answer_text=question_service.answer_text(row["question"]["answer_json"]),
-                           submitted=request.form.get("submitted", ""),
-                           ratings=prompts.RATING_LABELS)
+                           answer_text=question_service.answer_text(question["answer_json"]),
+                           options=question_service.options_of(question),
+                           submitted=submitted, verdict=verdict, preselect=preselect,
+                           baseline=baseline, ratings=prompts.RATING_LABELS,
+                           retractable=(int(row["mistake"]["review_count"] or 0) == 0
+                                        and row["mistake"]["entry_reason"] == "marked_wrong"))
+
+
+@bp.post("/card/<int:mistake_id>/retract")
+@decorators.require_login
+def retract(mistake_id):
+    """改判「我其实答对了」：把那道自动入队、还没复习过的错题收回去（三-13）。"""
+    csrf.require_valid_token()
+    retracted = review_service.retract_wrong(g.conn, decorators.current_user_id(), mistake_id)
+    flash(prompts.RETRACTED if retracted else prompts.RETRACT_REFUSED,
+          "success" if retracted else "warning")
+    return redirect(url_for("review.today"))
 
 
 @bp.post("/card/<int:mistake_id>/rate")
 @decorators.require_login
 def rate(mistake_id):
     _require_token()
-    _own_row(mistake_id)
+    row = _own_row(mistake_id)
+    seconds = _seconds(request.form.get("started"))
+    rating = request.form.get("rating", type=int) or 0
     try:
-        result = review_service.rate(g.conn, decorators.current_user_id(), mistake_id,
-                                     request.form.get("rating", type=int) or 0,
-                                     _seconds(request.form.get("started")))
+        result = review_service.rate(g.conn, decorators.current_user_id(), mistake_id, rating,
+                                     seconds, rating_source=_rating_source(
+                                         g.conn, decorators.current_user_id(),
+                                         row["question"]["subject_id"], seconds, rating))
     except ValidationError as exc:
         flash(exc.message, "warning")
         return redirect(url_for("review.today"))
     flash(f"评好了，下一次到期：{result['next_due']}", "success")
     return redirect(url_for("review.today"))
+
+
+def _rating_source(conn, user_id: int, subject_id: int, seconds: int, rating: int) -> str:
+    """这一档是耗时预选替用户选的，还是他自己改的？记下来才能统计"人改判率"。
+
+    ★ 预选值在这儿**重算一遍**，不信表单里带的那个隐藏字段：表单是可以被人改的，
+      而"改判率"这个统计的意义恰恰是拿人的选择跟机器的预选比。
+    """
+    preselect, _baseline = review_service.duration_preselect(conn, user_id, subject_id, seconds)
+    return "duration_default" if preselect is not None and rating == preselect else "user_override"
 
 
 def _require_token() -> None:

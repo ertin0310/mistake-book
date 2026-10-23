@@ -5,6 +5,8 @@
 """
 
 from src.domain.question_types.base import TypeHandler
+from src.domain.question_types.blank import blank
+from src.domain.question_types.choice import choice
 from src.domain.question_types.essay import essay
 
 _REGISTRY: dict[str, TypeHandler] = {}
@@ -27,3 +29,5 @@ def known() -> tuple[str, ...]:
 
 
 register(essay)
+register(choice)
+register(blank)

@@ -35,6 +35,12 @@
       <textarea name="stem" rows="3" required>{{ form.get('stem', '') }}</textarea>
     </label>
 
+    {% if option_widgets[form.get('type') or 'essay'] %}
+    <label>选项
+      {{ option_widgets[form.get('type') or 'essay'] | safe }}
+    </label>
+    {% endif %}
+
     {# 答案那一栏的控件由题型处理器给——录题页与复习作答页共用同一份，不写两遍 #}
     <label>参考答案
       {{ widgets[form.get('type') or 'essay'] | safe }}
