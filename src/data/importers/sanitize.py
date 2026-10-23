@@ -50,5 +50,10 @@ def strip_code_fences(text: str) -> tuple[str, int]:
 
 
 def split_lines(text: str) -> list[str]:
-    """按行切，丢掉空行与纯说明行（AI 偶尔会在 JSON 前后加一句"好的，如下："）。"""
+    """按行切，只丢空行。
+
+    ★ 不猜"哪行是 AI 说的废话"：`好的，如下：` 这种行交给 JSONL 解析器如实报
+      "这一行不是合法 JSON"并带真实行号，比在这里偷偷丢掉更可核对——
+      用户删错了行数还能找回来，被程序吃掉的行是找不回来的。
+    """
     return [line for line in text.split("\n") if line.strip()]

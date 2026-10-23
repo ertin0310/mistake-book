@@ -27,7 +27,7 @@
       {% endfor %}
     </table>
     {% else %}
-      <p class="muted small">没有删过的{{ group.label }}。</p>
+      <p class="empty small">{{ prompts.EMPTY_TRASH_GROUP }}</p>
     {% endif %}
   {% endfor %}
 

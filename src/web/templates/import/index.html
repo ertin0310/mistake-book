@@ -73,7 +73,7 @@
     <button class="primary">确认导入这 {{ result.ok|length }} 行</button>
   </form>
   {% else %}
-    <p class="empty">没有可导入的行，先回去改改文件。</p>
+    <p class="empty">{{ prompts.EMPTY_IMPORT }}</p>
   {% endif %}
   {% endif %}
 </section>

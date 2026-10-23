@@ -17,6 +17,8 @@
   --danger-bg: #fbe9e5;
   --ok: #2f7a52;
   --ok-bg: #e6f2ea;
+  --warn: #92610f;          --warn-bg: #fdf1dc;
+  --focus: #9dc0ef;
   --radius: 10px;
   --shadow: 0 1px 3px rgba(30, 58, 95, .09), 0 6px 18px rgba(30, 58, 95, .07);
 }
@@ -107,7 +109,7 @@ button:hover { filter: saturate(1.15) brightness(.98); }
 }
 
 .notice.danger { color: var(--danger); background: var(--danger-bg); border-color: #e8c3b9; }
-.notice.warning { color: #92610f; background: #fdf1dc; }
+.notice.warning { color: var(--warn); background: var(--warn-bg); }
 .notice.success { color: var(--ok); background: var(--ok-bg); border-color: #cfe0c6; }
 
 /* ---------------------------------------------------------------- 表格与列表 */
@@ -115,6 +117,8 @@ button:hover { filter: saturate(1.15) brightness(.98); }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
 th { background: var(--bg-soft); font-weight: 600; font-size: 13px; }
+tbody tr:nth-child(even) td, tbody tr:nth-child(even) th { background: transparent; }
+tr:hover td { background: #f6fafe; }
 
 .muted { color: var(--ink-soft); }
 .empty { padding: 28px; text-align: center; color: var(--ink-soft); }
@@ -257,3 +261,43 @@ svg.trend .area { fill: rgba(37, 99, 235, .12); stroke: none; }
 svg.trend .line { fill: none; stroke-width: 2; }
 svg.trend .line.total { stroke: var(--accent); }
 svg.trend .line.missed { stroke: #d98a1f; }
+
+/* ---------------------------------------------------------------- 步 17 统一与收尾 */
+
+/* 卡片内的小标题：四张图、回收站三格都靠它拉出层级，不靠字号硬堆 */
+.card h2 { margin: 22px 0 6px; font-size: 15px; letter-spacing: .02em; }
+.card h2:first-of-type { margin-top: 16px; }
+.card h3 { margin: 18px 0 6px; font-size: 14px; }
+.card p { margin: 6px 0; }
+
+/* 键盘焦点：只用浏览器默认的细黑圈太隐蔽，这里给一圈主色 */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+
+/* 侧边栏：长页面滚下去也别丢了导航 */
+@media (min-width: 721px) {
+  .sidebar { position: sticky; top: 18px; }
+}
+
+/* 数字用等宽，列表右对齐时不会跳行 */
+td.n, .figures b, ul.bars .num { font-variant-numeric: tabular-nums; }
+
+/* 翻页条：当前页与可点页要一眼分得开 */
+.pager a:hover { background: var(--bg-soft); }
+.pager .gap { border: none; color: var(--ink-soft); }
+
+/* 窄屏：四格数字改成两列，图表不至于挤成一团 */
+@media (max-width: 560px) {
+  .figures { grid-template-columns: repeat(2, 1fr); }
+  ul.bars li { grid-template-columns: 96px 1fr 30px; }
+  .layout { padding: 14px; }
+  .card { padding: 16px; }
+}
+
+/* 顶栏在窄屏折行时不要让按钮挤成一堆 */
+@media (max-width: 560px) {
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .topbar form.inline { margin-left: 0; }
+}

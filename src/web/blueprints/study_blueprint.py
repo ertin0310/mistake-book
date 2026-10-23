@@ -22,7 +22,7 @@ def my_questions():
                                        request.args.get("page", 1, type=int),
                                        request.args.get("subject", type=int)),
         subjects=subject_service.options(g.conn),
-        empty_text="还没有题目。先录一道，复习才有东西排。")
+        empty_text=prompts.EMPTY_QUESTIONS)
 
 
 @bp.get("/drill")
@@ -35,7 +35,7 @@ def shared_pool():
                                               request.args.get("page", 1, type=int),
                                               request.args.get("subject", type=int)),
         subjects=subject_service.options(g.conn),
-        empty_text="共享池暂时是空的。")
+        empty_text=prompts.EMPTY_POOL)
 
 
 @bp.route("/new", methods=["GET", "POST"])

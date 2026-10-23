@@ -58,7 +58,7 @@
     <polyline class="line missed" points="{{ stats.trend_shapes.missed }}"/>
   </svg>
   {% else %}
-  <p class="empty">这 30 天还没有复习记录。去「今日复习」刷几道，这张图就有了。</p>
+  <p class="empty">{{ prompts.EMPTY_STATS_TREND }}</p>
   {% endif %}
 
   <h2>薄弱知识点</h2>
@@ -74,7 +74,7 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="empty">暂时没有能统计的错题知识点（已下架的知识点不参与排行，也不报错）。</p>
+  <p class="empty">{{ prompts.EMPTY_STATS_WEAK }}</p>
   {% endif %}
 </section>
 {% endblock %}

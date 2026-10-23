@@ -28,6 +28,12 @@ def daily_cap(conn, user_id: int) -> int:
     return min(max(value, schedule.DAILY_CAP_MIN), schedule.DAILY_CAP_MAX)
 
 
+def due_count(conn, user_id: int) -> int:
+    """侧边栏角标用：今天到期多少道。与今日复习页同一个复习日、同一条查询。"""
+    repo = MistakeRepo(conn, user_id)
+    return repo.count_due(clock.review_date_of(_rollover(conn, user_id)))
+
+
 def today_queue(conn, user_id: int, page: int = 1, extra: int = 0):
     """今日复习的一页 + 顶部提示要用的三个数。
 

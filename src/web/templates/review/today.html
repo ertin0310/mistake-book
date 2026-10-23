@@ -21,7 +21,7 @@
     {% endif %}
     {% include "_pager.html" %}
   {% else %}
-    <p class="empty">今天没有到期的错题。先去学习模式做几道题，做错的会自动排进来。</p>
+    <p class="empty">{{ prompts.EMPTY_QUEUE }}</p>
   {% endif %}
 </section>
 {% endblock %}

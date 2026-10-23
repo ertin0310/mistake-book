@@ -42,6 +42,20 @@ def create_app() -> Flask:
     return app
 
 
+def _badges() -> dict:
+    """侧边栏角标：只挂"今天到期几道"这一个数（失效数在步 20）。
+
+    没登录、或库里还没有任何错题时返回空字典，模板那一格就不出现。
+    """
+    from src.services import review_service        # 在这儿取，避免模块层循环 import
+
+    user_id = decorators.current_user_id()
+    if user_id is None:
+        return {}
+    count = review_service.due_count(g.conn, user_id)
+    return {"due_count": count} if count else {}
+
+
 def _register_template_globals(app: Flask) -> None:
     """模板能拿到的东西全在这一个函数里：防冒名签、当前登录者、按模式过滤好的菜单。
 
@@ -65,7 +79,7 @@ def _register_template_globals(app: Flask) -> None:
             "menu_groups": menu.menu_groups(mode, role),
             "is_active": menu.is_active,
             "menu_group_empty": lambda group: prompts.MENU_GROUP_EMPTY.get(group, ""),
-            "badges": {},          # 角标数据（今日到期数、失效数）分别在第 9、20 步接上
+            "badges": _badges(),
         }
 
 

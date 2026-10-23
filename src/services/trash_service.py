@@ -38,7 +38,7 @@ def _describe(repo: ArchiveRepo, entity: str, row) -> dict:
     spec = archive.ENTITIES[entity]
     title = row[spec.title_column]
     if entity == "mistake":
-        question = QuestionRepo(repo.conn, repo.viewer_id).any_visible(row["question_id"])
+        question = QuestionRepo(repo.conn, repo.actor_id).any_visible(row["question_id"])
         title = question["stem"] if question else f"题目 #{row['question_id']}"
     return {"id": row["id"], "title": str(title)[:60],
             "deleted_at": (row[spec.deleted_column] or "")[:10]}
