@@ -72,3 +72,53 @@ class KnowledgeRepo(BaseRepo):
             (subject_id, name.strip(), clean, user_id))
         self.conn.commit()
         return int(cursor.lastrowid)
+
+    # ------------------------------------------------------------ 步 18 补的读法与写法
+
+    def browse(self, subject_id, page: int = 1):
+        """浏览页：只看当前能用的那些，按名字排；`subject_id=None` 表示全部科目。"""
+        where = f"({USABLE})"
+        params = {}
+        if subject_id:
+            where = f"(subject_id = :subject) AND {where}"
+            params["subject"] = int(subject_id)
+        return self.paginate(where=where, params=params, order="name", page=page)
+
+    def same_name(self, subject_id: int, name: str) -> list:
+        """同科目下同名（按归一化名）的**能用**行——就是"已经有了"要列给用户看的那几条。"""
+        return self.rows(where=f"(subject_id = :subject AND name_normalized = :clean) AND ({USABLE})",
+                         params={"subject": subject_id, "clean": normalize.normalize_name(name)},
+                         order="name")
+
+    def submitted_by(self, user_id: int) -> list:
+        """我提交过的知识点，含被驳回与下架的（这两档只有作者自己看得见，靠 policy 口径）。"""
+        return self.rows(where="created_by_user_id = :who", params={"who": user_id},
+                         order="id DESC")
+
+    def pending(self) -> list:
+        """审核队列 = `reviewed_by IS NULL`（三-6）；提交即入池，所以队列与可用性互不矛盾。"""
+        return self.rows(where=f"reviewed_by IS NULL AND ({USABLE})", order="id")
+
+    def resubmit(self, point_id: int, user_id: int, name: str) -> bool:
+        """作者改名重提：回到 `approved` 并把审核痕迹清空 → 重新排队待审（三-6）。
+
+        返回是否真改到。`WHERE created_by_user_id` 保证只能动自己提交的那条，
+        改别人的 = 改不到，调用方据此给 404。
+        """
+        clean = normalize.normalize_name(name)
+        cursor = self.conn.execute(
+            "UPDATE knowledge_point SET name=?, name_normalized=?, status='approved',"
+            " reviewed_by=NULL, reviewed_at=NULL, review_note=?"
+            " WHERE id=? AND created_by_user_id=?",
+            (name.strip(), clean, None, point_id, user_id))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def reject(self, point_id: int, admin_id: int, note: str) -> bool:
+        """驳回：状态给作者留着原因，行不删（步 23 后台页面用的就是它）。"""
+        cursor = self.conn.execute(
+            "UPDATE knowledge_point SET status='rejected', reviewed_by=:admin,"
+            " reviewed_at=datetime('now','localtime'), review_note=:note WHERE id=:id",
+            {"admin": admin_id, "note": note, "id": point_id})
+        self.conn.commit()
+        return cursor.rowcount > 0

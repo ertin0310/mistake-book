@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}知识点{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="pagehead">
+    <h1>知识点</h1>
+    <a class="muted" href="{{ url_for('knowledge.mine') }}">我的知识点申请</a>
+  </header>
+  <p class="muted">提交即入池：你写完别人马上能挂上这道题，管理员的事后审核只影响它以后还在不在池子里。</p>
+
+  <form method="get" class="filterbar">
+    <label>科目
+      <select name="subject" onchange="this.form.submit()">
+        <option value="" {{ 'selected' if not subject_id }}>全部科目</option>
+        {% for id, name in subjects %}
+        <option value="{{ id }}" {{ 'selected' if id == subject_id }}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <noscript><button>切换</button></noscript>
+  </form>
+
+  {% for error in errors %}<p class="notice danger">{{ error }}</p>{% endfor %}
+
+  <form method="post" action="{{ url_for('knowledge.index') }}" class="stack">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="subject_id" value="{{ subject_id or '' }}">
+    <label>新增知识点
+      <input name="name" maxlength="60" placeholder="例：牛顿第二定律" value="{{ form.get('name', '') }}" required>
+    </label>
+    <label class="check">
+      <input type="checkbox" name="not_same" value="1"> {{ prompts.KP_NOT_SAME }}
+      <span class="muted small">撞名被拦下时才需要勾它</span>
+    </label>
+    <button class="primary">提交</button>
+  </form>
+
+  <hr class="rule">
+
+  {% if page_obj and page_obj.items %}
+  <table>
+    <tr><th>知识点</th><th>科目</th></tr>
+    {% for row in page_obj.items %}
+    <tr><td>{{ row['name'] }}</td><td class="muted">{{ subject_names.get(row['subject_id'], '') }}</td></tr>
+    {% endfor %}
+  </table>
+  {% include "_pager.html" %}
+  {% else %}
+  <p class="empty">{{ empty_text }}</p>
+  {% endif %}
+</section>
+{% endblock %}

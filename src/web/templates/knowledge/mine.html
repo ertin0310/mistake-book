@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}我的知识点申请{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="pagehead">
+    <h1>我的知识点申请</h1>
+    <a class="muted" href="{{ url_for('knowledge.index') }}">返回知识点</a>
+  </header>
+  <p class="muted">「在用」表示所有人现在就能挂上它；被驳回与已下架的只有你看得见，也不占名字。</p>
+
+  {% if items %}
+  <table>
+    <tr><th>知识点</th><th>科目</th><th>状态</th><th>说明</th><th class="n">改名重提</th></tr>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.name }}</td>
+      <td class="muted">{{ item.subject }}</td>
+      <td>{{ item.label }}</td>
+      <td class="muted small">
+        {% if item.status == 'rejected' and item.note %}{{ prompts.KP_REJECTED_NOTE.format(note=item.note) }}
+        {% elif item.status == 'hidden' %}{{ prompts.KP_HIDDEN_NOTE }}
+        {% elif item.pending %}{{ prompts.KP_PENDING_NOTE }}
+        {% else %}管理员看过了，没问题{% endif %}
+      </td>
+      <td class="n">
+        <form method="post" action="{{ url_for('knowledge.rename', point_id=item.id) }}" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input name="name" maxlength="60" value="{{ item.name }}" size="14" aria-label="新的知识点名字">
+          <button class="link">提交</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">{{ empty_text }}</p>
+  {% endif %}
+</section>
+{% endblock %}

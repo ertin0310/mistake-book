@@ -13,8 +13,8 @@ from src.data import db, seed
 from src.services import agreement_service
 from src.web import csrf, decorators
 from src.web.blueprints import (agreement_blueprint, auth_blueprint, export_blueprint,
-                                import_blueprint, main, review_blueprint, settings_blueprint,
-                                study_blueprint)
+                                import_blueprint, knowledge_blueprint, main, review_blueprint,
+                                settings_blueprint, study_blueprint)
 
 # 这些地址在"还没同意协议"时也得能打开，否则门自己把自己锁死了
 AGREEMENT_EXEMPT = {"static", "agreement.page", "agreement.accept",
@@ -43,6 +43,7 @@ def create_app() -> Flask:
     app.register_blueprint(import_blueprint.bp)
     app.register_blueprint(export_blueprint.bp)
     app.register_blueprint(agreement_blueprint.bp)
+    app.register_blueprint(knowledge_blueprint.bp)
     _register_connection(app)          # 先开连接，协议门要用它
     _register_agreement_gate(app)
     _register_template_globals(app)
