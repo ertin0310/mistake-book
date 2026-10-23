@@ -32,6 +32,10 @@ class MistakeRepo(BaseRepo):
     table = "mistake"
     scope = SCOPE_USER
 
+    def rows_active(self) -> list:
+        """活跃错题：未删、也未过期封存。统计四格与"还有多少没刷完"都只认这份。"""
+        return self.rows(where="deleted_at IS NULL AND purged_at IS NULL", order="due_date")
+
     def active_for(self, question_id: int):
         """同一道题只允许一条活跃错题（partial unique: user_id+question_id WHERE 未删）。"""
         return self.conn.execute(

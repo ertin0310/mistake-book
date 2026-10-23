@@ -42,6 +42,17 @@ class KnowledgeRepo(BaseRepo):
                                  "clean": normalize.normalize_name(name)})
         return rows[0]["id"] if rows else None
 
+    def usable_rows(self) -> list:
+        """能用的那些行，整份拿出来（统计页要在内存里反复查同一批名字）。"""
+        return self.rows(where=USABLE)
+
+    def points_of_question(self, question_id: int) -> list:
+        """这道题挂着哪几个知识点（返回行，含 `subject_id` 与归一化名，调用方自己筛）。"""
+        return self.conn.execute(
+            f"SELECT kp.* FROM knowledge_point kp"
+            f" JOIN question_knowledge_point link ON link.knowledge_point_id = kp.id"
+            f" WHERE link.question_id = :q AND {USABLE} ORDER BY kp.id", {"q": question_id}).fetchall()
+
     def names_by_question(self, question_id: int) -> list:
         """这道题挂了哪些还在用池子里的知识点名（导出题目清单、以后详情页都靠它）。"""
         return [row["name"] for row in self.conn.execute(

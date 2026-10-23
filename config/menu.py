@@ -50,7 +50,7 @@ MENU = [
     MenuItem("review_invalid", "复习", "已失效的题目", "/review/invalid", mode="review",
              icon="warning", badge="invalid_count", visible=False),
     MenuItem("stats", "复习", "统计", "/review/stats", mode="review", icon="chart",
-             visible=False),
+             visible=True),
     MenuItem("trash", "复习", "回收站", "/review/trash", mode="review", icon="trash",
              visible=True),
 

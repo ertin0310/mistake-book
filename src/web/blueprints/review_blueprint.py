@@ -15,7 +15,8 @@ from src.data.repository.base import Page
 from src.data.repository.mistake_repo import MistakeRepo
 from src.domain.errors import ValidationError
 from src.domain.errors import RestoreConflictError
-from src.services import question_service, review_service, trash_service
+from src.services import (question_service, review_service, stats_service,
+                           trash_service)
 from src.web import csrf, decorators
 
 bp = Blueprint("review", __name__, url_prefix="/review")
@@ -33,6 +34,14 @@ def today():
                     total=queue["total"], total_pages=queue["pages"])
     return render_template("review/today.html", queue=queue, page_obj=page_obj,
                            first=queue["rows"][0]["id"] if queue["rows"] else None)
+
+
+@bp.get("/stats")
+@decorators.require_login
+def stats():
+    """统计四图：数字全在 `stats_service` 里算，这一层只是取来摆。"""
+    return render_template("review/stats.html", stats=stats_service.overview(g.conn,
+                                                                             decorators.current_user_id()))
 
 
 @bp.get("/trash")

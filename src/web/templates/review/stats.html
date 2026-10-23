@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}统计{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="pagehead">
+    <h1>统计</h1>
+    <span class="muted">复习日 {{ stats.review_date }}</span>
+  </header>
+
+  <div class="figures">
+    <div><b>{{ stats.today.queue }}</b><span>队列里的错题</span></div>
+    <div><b>{{ stats.today.due }}</b><span>今天到期</span></div>
+    <div><b>{{ stats.today.reviewed }}</b><span>今天已复习</span></div>
+    <div><b>{{ stats.today.wrong_today }}</b><span>今天做错</span></div>
+  </div>
+
+  <h2>掌握度分布</h2>
+  <p class="muted">按错题走过的台阶分四格，到顶是第 7 级；不另外记一个"掌握度"。</p>
+  <ul class="bars">
+    {% for item in stats.mastery %}
+    <li>
+      <span class="name">{{ item.label }}</span>
+      <span class="track"><i style="width: {{ (item.count * 100 / stats.mastery_max)|round(1) }}%"></i></span>
+      <span class="num">{{ item.count }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <h2>复习热力图</h2>
+  <p class="muted">最近 45 天，按复习日计数。空着的那些格子也是要看的。</p>
+  <div class="heat">
+    {% for week in stats.heatmap_weeks %}
+    <div class="heatrow">
+      {% for cell in week %}
+        {% if cell %}
+          {% set level = 0 %}
+          {% if cell.count %}
+            {% set level = 1 if cell.count * 4 <= stats.heatmap_max
+                    else 2 if cell.count * 2 <= stats.heatmap_max
+                    else 3 if cell.count < stats.heatmap_max else 4 %}
+          {% endif %}
+          <span class="h{{ level }}" title="{{ cell.date }} 复习 {{ cell.count }} 道"></span>
+        {% else %}<span class="hvoid"></span>{% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2>近 30 天</h2>
+  {% if stats.trend %}
+  <p class="muted">
+    蓝线是每天复习的总数，橙线是其中「没记住 / 一般般」的那部分。峰值 {{ stats.trend_shapes.peak }} 道。
+  </p>
+  <svg class="trend" viewBox="0 0 300 80" preserveAspectRatio="none" role="img"
+       aria-label="近 30 天复习趋势">
+    <polygon class="area" points="{{ stats.trend_shapes.area }}"/>
+    <polyline class="line total" points="{{ stats.trend_shapes.total }}"/>
+    <polyline class="line missed" points="{{ stats.trend_shapes.missed }}"/>
+  </svg>
+  {% else %}
+  <p class="empty">这 30 天还没有复习记录。去「今日复习」刷几道，这张图就有了。</p>
+  {% endif %}
+
+  <h2>薄弱知识点</h2>
+  <p class="muted">两个来源同权：练习做错一次记一次，复习自评「没记住 / 一般般」也记一次。</p>
+  {% if stats.weak_points %}
+  <ul class="bars">
+    {% for item in stats.weak_points %}
+    <li>
+      <span class="name">{{ item.name }}<em>{{ item.subject }}</em></span>
+      <span class="track"><i style="width: {{ (item.count * 100 / stats.weak_max)|round(1) }}%"></i></span>
+      <span class="num">{{ item.count }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">暂时没有能统计的错题知识点（已下架的知识点不参与排行，也不报错）。</p>
+  {% endif %}
+</section>
+{% endblock %}
