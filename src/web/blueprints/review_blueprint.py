@@ -33,7 +33,9 @@ def today():
     page_obj = Page(items=queue["rows"], page=queue["page"], page_size=queue["cap"],
                     total=queue["total"], total_pages=queue["pages"])
     return render_template("review/today.html", queue=queue, page_obj=page_obj,
-                           first=queue["rows"][0]["id"] if queue["rows"] else None)
+                           first=queue["rows"][0]["id"] if queue["rows"] else None,
+                           done=review_service.reviewed_today(g.conn,
+                                                              decorators.current_user_id()))
 
 
 @bp.get("/stats")
@@ -129,7 +131,12 @@ def rate(mistake_id):
     except ValidationError as exc:
         flash(exc.message, "warning")
         return redirect(url_for("review.today"))
+    # ★ 评完直接跳到下一道到期题：让用户回到列表再点"开始第 1 道"是白多一次点击
+    next_id = review_service.next_due(g.conn, decorators.current_user_id(),
+                                      exclude_id=mistake_id)
     flash(f"评好了，下一次到期：{result['next_due']}", "success")
+    if next_id is not None:
+        return redirect(url_for("review.card", mistake_id=next_id))
     return redirect(url_for("review.today"))
 
 

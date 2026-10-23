@@ -18,7 +18,7 @@
   </div>
 
   {% if first %}
-    <a class="cta" href="{{ url_for('review.card', mistake_id=first) }}">开始第 1 道 →</a>
+    <a class="cta" href="{{ url_for('review.card', mistake_id=first) }}">{{ prompts.REVIEW_CONTINUE.format(n=done + 1) }}</a>
     {% if queue.over %}
       <p class="notice warning">
         今日另有 {{ queue.over }} 道到期，已到每日上限未安排。

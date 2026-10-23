@@ -242,3 +242,5 @@ ADMIN_NAME_CLASH = "这个名字已经有了，换一个，或者去用现有的
 ADMIN_POINT_DECIDED = "这一条已经处理完。"
 ADMIN_BLIND_NOTE = "提交人是谁，被处置的作者永远看不到。"
 FORBIDDEN_ADMIN = "这一页只有管理员能进。"
+REVIEW_CONTINUE = "继续第 {n} 道 →"
+REVIEW_DONE_ALL = "今天到期的题都刷完了。"

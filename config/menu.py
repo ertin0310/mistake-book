@@ -37,8 +37,10 @@ MODE_HOME = {"study": "/study/", "review": "/review/today"}
 
 MENU = [
     # ---------------------------------------------------------- 学习模式
+    # ★ 不给 prefix：`/study/new`、`/study/drill` 都各有自己的条目，
+    #   给整组挂一个 "/study" 前缀会让"我的题目"在别的页面上也跟着亮（他指出的）。
     MenuItem("study_home", "学习", "我的题目", "/study/", mode="study", icon="book",
-             prefix="/study", visible=True),
+             visible=True),
     MenuItem("study_drill", "学习", "题库刷题", "/study/drill", mode="study", icon="layers",
              prefix="/study/drill", visible=True),
     MenuItem("knowledge", "学习", "知识点", "/knowledge/", mode="study", icon="tag",
@@ -63,7 +65,7 @@ MENU = [
     # 「导入」是一个可展开的入口：点它默认进手动录题，展开后是手动 / CSV 两条路。
     # 挂在账户组是因为它**两种模式都要能用**——复习模式也得能录题（他 2026-10-23 指出）。
     MenuItem("import", "账户", "导入", "/study/new", mode="both", icon="upload",
-             prefix="/import", visible=True),
+             visible=True),
     MenuItem("study_new", "账户", "手动录题", "/study/new", mode="both", icon="pen",
              parent="import", prefix="/study/new", visible=True),
     MenuItem("import_csv", "账户", "CSV 录题", "/import/", mode="both", icon="upload",
@@ -99,6 +101,11 @@ def visible_menu(mode: str, role: str) -> list[MenuItem]:
 def children_of(key: str, items: list[MenuItem]) -> list[MenuItem]:
     """某条父项下面的子项（侧边栏展开用）。"""
     return [item for item in items if item.parent == key]
+
+
+def kids_active(kids: list[MenuItem], path: str) -> bool:
+    """子项里有一项正亮着，父项就保持展开状态——不然刷新一次就得重新点一次。"""
+    return any(is_active(kid, path) for kid in kids)
 
 
 def top_level(items: list[MenuItem]) -> list[MenuItem]:

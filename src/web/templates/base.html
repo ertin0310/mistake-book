@@ -41,20 +41,27 @@
         <ul>
           {% for item in top_level(items) %}
           <li class="{{ 'active' if is_active(item, request.path) }}">
+            {% if not children_of(item.key, items) %}
             <a href="{{ item.url }}">{{ item.label }}
               {% if item.badge and badges.get(item.badge) %}
               <span class="badge">{{ badges[item.badge] }}</span>
               {% endif %}
             </a>
+            {% endif %}
             {% set kids = children_of(item.key, items) %}
             {% if kids %}
-            <ul class="submenu">
-              {% for kid in kids %}
-              <li class="{{ 'active' if is_active(kid, request.path) }}">
-                <a href="{{ kid.url }}">{{ kid.label }}</a>
-              </li>
-              {% endfor %}
-            </ul>
+            {# 父子同屏只亮一个：父项亮成"已展开"，具体哪一页由子项亮 #}
+            <details class="submenu"{{ ' open' if is_active(item, request.path)
+                    or kids_active(kids, request.path) else '' }}>
+              <summary>{{ item.label }}</summary>
+              <ul>
+                {% for kid in kids %}
+                <li class="{{ 'active' if is_active(kid, request.path) }}">
+                  <a href="{{ kid.url }}">{{ kid.label }}</a>
+                </li>
+                {% endfor %}
+              </ul>
+            </details>
             {% endif %}
           </li>
           {% endfor %}

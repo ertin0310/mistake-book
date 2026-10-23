@@ -34,6 +34,21 @@ def due_count(conn, user_id: int) -> int:
     return repo.count_due(clock.review_date_of(_rollover(conn, user_id)))
 
 
+def next_due(conn, user_id: int, exclude_id=None):
+    """今天还剩哪一道该刷（用于"评完自动跳下一题"）。没有下一道就返回 None。"""
+    review_date = clock.review_date_of(_rollover(conn, user_id))
+    for row in MistakeRepo(conn, user_id).due_page(review_date, page=1, limit=50).items:
+        if exclude_id is None or row["id"] != exclude_id:
+            return row["id"]
+    return None
+
+
+def reviewed_today(conn, user_id: int) -> int:
+    """今天已经评了几道——今日复习页那句"继续第 N 道"靠它，不靠猜。"""
+    review_date = clock.review_date_of(_rollover(conn, user_id))
+    return ReviewLogRepo(conn, user_id).count_today(review_date)
+
+
 def today_queue(conn, user_id: int, page: int = 1, extra: int = 0):
     """今日复习的一页 + 顶部提示要用的三个数。
 

@@ -201,7 +201,7 @@ def test_full_review_flow_in_the_browser(client, db):
         "csrf_token": csrf_token(client, "/study/practice")}).status_code == 302
 
     today = client.get("/review/today").get_data(as_text=True)
-    assert "开始第 1 道" in today
+    assert "继续第 1 道" in today
     mistake_id = int(re.search(r"/review/card/(\d+)", today).group(1))
 
     card = client.get(f"/review/card/{mistake_id}").get_data(as_text=True)

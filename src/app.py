@@ -92,6 +92,7 @@ def _register_template_globals(app: Flask) -> None:
             "is_active": menu.is_active,
             "top_level": menu.top_level,
             "children_of": menu.children_of,
+            "kids_active": menu.kids_active,
             "menu_group_empty": lambda group: prompts.MENU_GROUP_EMPTY.get(group, ""),
             "badges": _badges(),
         }

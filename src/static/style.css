@@ -353,9 +353,9 @@ textarea.sample {
        border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 14px; }
 
 /* 侧边栏可展开的子项（步 17 收尾：导入 = 手动录题 / CSV 录题） */
-.menu-group ul ul.submenu { margin: 2px 0 0 14px; padding-left: 8px;
-                            border-left: 1px solid var(--line); }
-.menu-group ul ul.submenu a { padding: 5px 8px; font-size: 13.5px; }
+.menu-group details.submenu ul { margin: 2px 0 0 14px; padding-left: 8px;
+                                    border-left: 1px solid var(--line); }
+.menu-group details.submenu ul a { padding: 5px 8px; font-size: 13.5px; }
 
 /* 后台：独立布局（不套普通侧边栏），导航横在顶栏下面 */
 .admin-body { display: block; }
@@ -365,3 +365,16 @@ textarea.sample {
               font-size: 14px; }
 .adminnav a:hover { background: var(--card); }
 .brand .script { font-family: "STXingkai", "华文行楷", "STKaiti", "KaiTi", "楷体", cursive; }
+
+/* 折叠子菜单（details/summary，纯 HTML，不引 JS） */
+details.submenu { margin-top: 2px; }
+details.submenu > summary {
+  cursor: pointer; list-style: none; padding: 7px 10px; border-radius: 7px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+details.submenu > summary::-webkit-details-marker { display: none; }
+details.submenu > summary::after { content: "▾"; margin-left: auto; color: var(--ink-soft);
+                                   font-size: 11px; transition: transform .15s; }
+details.submenu[open] > summary::after { transform: rotate(180deg); }
+details.submenu > summary:hover { background: var(--bg-soft); }
+details.submenu li.active > a { font-weight: 700; }
