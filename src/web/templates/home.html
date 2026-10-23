@@ -1,23 +1,67 @@
 {% extends "base.html" %}
-{% block title %}地基自检{% endblock %}
+{% block title %}首页{% endblock %}
 {% block content %}
-<main class="card">
-  <h1>地基自检</h1>
-  <p class="{{ 'ok' if ok else 'bad' }}">
-    {% if ok %}19 张表全部建成。{% else %}表数不对：建了 {{ tables|length }} 张，应为 {{ expected }} 张。{% endif %}
-  </p>
-  <p class="muted">
-    库文件：<code>{{ db_path }}</code><br>
-    今天的复习日：<code>{{ review_date }}</code>（切换时刻默认 00:00）<br>
-    AI 录入入口：{{ "已配置" if ai_on else "未配置，整块不显示（其余功能不受影响）" }}
-  </p>
-  <p class="muted">录题、今日复习、回收站、批量导入与导出都已经能用；统计图与共享池还在做。</p>
+<section class="card hero">
+  <header class="pagehead">
+    <h1>{{ prompts.HOME_GREETING.format(name=username) }}</h1>
+    <span class="muted">复习日 {{ review_date }}</span>
+  </header>
 
+  <div class="figures">
+    <div><b>{{ today.queue }}</b><span>{{ prompts.HOME_FIG_TOTAL }}</span></div>
+    <div><b>{{ today.due }}</b><span>{{ prompts.HOME_FIG_DUE }}</span></div>
+    <div><b>{{ today.reviewed }}</b><span>{{ prompts.HOME_FIG_REVIEWED }}</span></div>
+    <div><b>{{ today.wrong_today }}</b><span>{{ prompts.HOME_FIG_NEW }}</span></div>
+  </div>
+
+  <p class="muted">{{ prompts.HOME_LEAD }}</p>
+  <p>
+    {% if today.due %}
+    <a class="cta" href="{{ url_for('review.today') }}">{{ prompts.HOME_CTA_REVIEW }}（{{ today.due }} 道）→</a>
+    {% else %}
+    <a class="cta" href="{{ url_for('study.new_question') }}">{{ prompts.HOME_CTA_RECORD }} →</a>
+    {% endif %}
+  </p>
+</section>
+
+<section class="card">
+  <h2>{{ prompts.HOME_MASTERY_TITLE }}</h2>
+  <p class="muted">{{ prompts.HOME_MASTERY_LEAD }}</p>
+  <ul class="bars">
+    {% for item in mastery %}
+    <li>
+      <span class="name">{{ item.label }}</span>
+      <span class="track"><i style="width: {{ (item.count * 100 / mastery_max)|round(1) }}%"></i></span>
+      <span class="num">{{ item.count }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>{{ prompts.HOME_WEAK_TITLE }}</h2>
+  <p class="muted">{{ prompts.HOME_WEAK_LEAD }}</p>
+  {% if weak %}
   <table>
-    <tr><th>表</th><th class="n">行数</th></tr>
-    {% for name, count in rows %}
-      <tr><td><code>{{ name }}</code></td><td class="n">{{ count }}</td></tr>
+    <tr><th>知识点</th><th>科目</th><th class="n">错次</th></tr>
+    {% for row in weak %}
+    <tr><td>{{ row['name'] }}</td><td class="muted">{{ row['subject'] }}</td><td class="n">{{ row['count'] }}</td></tr>
     {% endfor %}
   </table>
-</main>
+  {% else %}
+  <p class="empty">{{ prompts.HOME_WEAK_EMPTY }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ prompts.HOME_QUICK_TITLE }}</h2>
+  <div class="quick">
+    <a href="{{ url_for('study.new_question') }}">手动录题</a>
+    <a href="{{ url_for('importer.index') }}">批量导入</a>
+    <a href="{{ url_for('study.practice') }}">刷我的题</a>
+    <a href="{{ url_for('study.shared_pool') }}">共享池刷题</a>
+    <a href="{{ url_for('review.today') }}">今日复习</a>
+    <a href="{{ url_for('review.stats') }}">统计</a>
+  </div>
+</section>
 {% endblock %}

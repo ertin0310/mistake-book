@@ -252,3 +252,33 @@ TIMER_RESUME_BUTTON = "继续计时"
 TIMER_PAUSED = "计时已暂停。去查资料吧，这段时间不算进耗时。"
 TIMER_RESUMED = "计时继续。"
 TIMER_HINT = "中途要离开？暂停一下，耗时才准。"
+
+# --------------------------------------------------------------- 首页（给用户看的那一面）
+
+HOME_GREETING = "{name}，这是你的今天"
+HOME_LEAD = "上面的数随时会变；点下面的入口就能接着做。"
+HOME_FIG_TOTAL = "错题总数"
+HOME_FIG_DUE = "今日待复习"
+HOME_FIG_REVIEWED = "今日已复习"
+HOME_FIG_NEW = "今日新增错题"
+HOME_CTA_REVIEW = "去复习今日到期"
+HOME_CTA_RECORD = "先录几道题"
+HOME_MASTERY_TITLE = "掌握度分布"
+HOME_MASTERY_LEAD = "按复习台阶把错题分成四档，越往右越稳。"
+HOME_WEAK_TITLE = "最容易错的知识点"
+HOME_WEAK_LEAD = "统计口径与统计页相同；这里只列前五条，看全表去统计页。"
+HOME_WEAK_EMPTY = "还没有可统计的作答记录。"
+HOME_QUICK_TITLE = "快捷入口"
+
+# --------------------------------------------------------------- 后台：建库自检
+
+ADMIN_DIAGNOSTICS_TITLE = "建库自检"
+ADMIN_DIAGNOSTICS_LEAD = "这一页给开发者和评审看，普通用户看不到：库建没建对、每张表多少行、AI 入口开没开。"
+ADMIN_DIAGNOSTICS_OK = "表数正确，全部建成。"
+ADMIN_DIAGNOSTICS_COUNT = "应建 {expected} 张，实建 {actual} 张。"
+ADMIN_DIAGNOSTICS_TABLE = "表"
+ADMIN_DIAGNOSTICS_ROWS = "行数"
+ADMIN_DIAGNOSTICS_DB = "库文件"
+ADMIN_DIAGNOSTICS_DATE = "今天的复习日"
+ADMIN_DIAGNOSTICS_AI_ON = "已配置"
+ADMIN_DIAGNOSTICS_AI_OFF = "未配置，AI 入口整块不显示（其余功能不受影响）"

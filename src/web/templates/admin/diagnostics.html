@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ prompts.ADMIN_DIAGNOSTICS_TITLE }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.ADMIN_DIAGNOSTICS_TITLE }}</h1>
+  <p class="{{ 'ok' if ok else 'bad' }}">{{ status }}</p>
+  <p class="muted">{{ prompts.ADMIN_DIAGNOSTICS_LEAD }}</p>
+  <p class="muted">
+    {{ prompts.ADMIN_DIAGNOSTICS_DB }}：<code>{{ db_path }}</code><br>
+    {{ prompts.ADMIN_DIAGNOSTICS_DATE }}：<code>{{ review_date }}</code>（切换时刻默认 00:00）<br>
+    AI 录入入口：{{ prompts.ADMIN_DIAGNOSTICS_AI_ON if ai_on else prompts.ADMIN_DIAGNOSTICS_AI_OFF }}
+  </p>
+
+  <table>
+    <tr><th>{{ prompts.ADMIN_DIAGNOSTICS_TABLE }}</th><th class="n">{{ prompts.ADMIN_DIAGNOSTICS_ROWS }}</th></tr>
+    {% for name, count in rows %}
+    <tr><td><code>{{ name }}</code></td><td class="n">{{ count }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

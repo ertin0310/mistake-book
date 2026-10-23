@@ -1,38 +1,32 @@
-"""首页与（第 5 步起）模式开关。
+"""首页与模式开关（第 5 步起）。
 
-第 2 步的首页是**公开占位页**；第 4 步（本轮）加上登录门槛，第 5 步换成带侧边栏的真首页。
-自检内容先留着：评审一条命令就能看见库建没建对。
+首页是**给用户看的那一面**（他 2026-10-23 指出：地基自检不该摆给用户）：
+今日四个数、掌握度分布、薄弱点排行、快捷入口。建库自检挪进后台 `/admin/diagnostics`。
 """
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
-from config import menu, prompts, settings
-from src.data import db
+from config import menu, prompts
 from src.data.repository.profile_repo import SettingRepo
-from src.domain import clock
 from src.domain.errors import ValidationError
+from src.services import stats_service
 from src.web import csrf, decorators
 
 bp = Blueprint("main", __name__)
-
-EXPECTED_TABLES = 19
 
 
 @bp.get("/")
 @decorators.require_login
 def home():
-    tables = db.table_names()
-    rows = [(name, int(g.conn.execute(f"SELECT COUNT(*) FROM {name}").fetchone()[0]))
-            for name in tables]
+    user_id = decorators.current_user_id()
+    stats = stats_service.overview(g.conn, user_id)
     return render_template(
         "home.html",
-        db_path=settings.DB_PATH,
-        tables=tables,
-        rows=rows,
-        expected=EXPECTED_TABLES,
-        ok=len(tables) == EXPECTED_TABLES,
-        review_date=clock.review_date_of("00:00"),
-        ai_on=settings.ai_enabled(),
+        today=stats["today"],
+        mastery=stats["mastery"],
+        mastery_max=stats["mastery_max"],
+        review_date=stats["review_date"],
+        weak=stats["weak_points"][:5],
     )
 
 
@@ -57,9 +51,3 @@ def switch_mode(mode):
     SettingRepo(g.conn, decorators.current_user_id()).set("mode", mode)
     g.conn.commit()
     return redirect(menu.MODE_HOME.get(mode, url_for("main.home")))
-
-
-def _safe_next(target: str | None) -> str:
-    if target and target.startswith("/") and not target.startswith("//"):
-        return target
-    return url_for("main.home")

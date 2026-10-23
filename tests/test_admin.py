@@ -7,7 +7,8 @@ from config import prompts
 from src.data.repository.knowledge_repo import KnowledgeRepo
 from tests.conftest import add_user, csrf_token, sign_up, uid_of
 
-PAGES = ("/admin/", "/admin/subject", "/admin/knowledge", "/admin/appeal")
+PAGES = ("/admin/", "/admin/subject", "/admin/knowledge", "/admin/appeal",
+         "/admin/diagnostics")
 
 
 def admin_client(client, db, username="boss"):
@@ -115,3 +116,20 @@ def test_admin_never_sees_anyone_elses_private_rows(client, db):
     admin = admin_client(client, db)
     for path in PAGES:
         assert "只有我自己看得见的题干" not in admin.get(path).get_data(as_text=True), path
+
+
+def test_diagnostics_lists_tables_and_db_path(client, db):
+    """建库自检搬到后台后照样能用：一张命令看得见的表数 + 库文件路径（他 2026-10-23 要求）。"""
+    body = admin_client(client, db).get("/admin/diagnostics").get_data(as_text=True)
+    assert prompts.ADMIN_DIAGNOSTICS_TITLE in body and prompts.ADMIN_DIAGNOSTICS_OK in body
+    for table in ("question_bank", "mistake", "review_log"):
+        assert table in body
+
+
+def test_selfcheck_no_longer_shows_on_the_home_page(client):
+    """★ 普通用户首页不再铺表名与库路径——那本来就是给开发者看的东西。"""
+    sign_up(client, username="stu")
+    body = client.get("/").get_data(as_text=True)
+    assert "user_setting" not in body and "mistake_book.db" not in body
+    assert prompts.ADMIN_DIAGNOSTICS_TITLE not in body
+    assert prompts.HOME_QUICK_TITLE in body and prompts.HOME_FIG_DUE in body

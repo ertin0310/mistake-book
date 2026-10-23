@@ -11,13 +11,18 @@ import sqlite3
 
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
 
-from config import prompts
+from config import prompts, settings
+from src.data import db
 from src.data.repository.knowledge_repo import KnowledgeRepo
 from src.data.repository.subject_repo import SubjectRepo
+from src.domain import clock
 from src.services import appeal_service, knowledge_service, subject_service
 from src.web import csrf, decorators
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+# 建库自检用的期望表数（评审一条命令就能看见库建没建对，他 2026-10-23 要求挪进后台）。
+EXPECTED_TABLES = 19
 
 
 @bp.get("/")
@@ -29,6 +34,30 @@ def home():
         "knowledge": len(KnowledgeRepo(g.conn).pending()),
         "appeal": len(appeal_service.queue(g.conn, "open")),
     })
+
+
+@bp.get("/diagnostics")
+@decorators.require_admin
+def diagnostics():
+    """建库自检：从首页挪进来的（他 2026-10-23 指出自检不该给用户看）。
+
+    表名取自 `sqlite_master`，不是外部输入，所以拼进 COUNT 语句没有注入面。
+    """
+    tables = db.table_names()
+    rows = [(name, int(g.conn.execute(f"SELECT COUNT(*) FROM {name}").fetchone()[0]))
+            for name in tables]
+    ok = len(tables) == EXPECTED_TABLES
+    return render_template(
+        "admin/diagnostics.html",
+        db_path=settings.DB_PATH,
+        rows=rows,
+        ok=ok,
+        status=(prompts.ADMIN_DIAGNOSTICS_OK if ok else
+                prompts.ADMIN_DIAGNOSTICS_COUNT.format(expected=EXPECTED_TABLES,
+                                                       actual=len(tables))),
+        review_date=clock.review_date_of("00:00"),
+        ai_on=settings.ai_enabled(),
+    )
 
 
 @bp.route("/subject", methods=["GET", "POST"])

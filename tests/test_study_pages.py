@@ -27,7 +27,7 @@ def test_new_question_form_renders_and_sidebar_opens(client):
     body = client.get("/study/new").get_data(as_text=True)
     assert "录一道题" in body and "参考答案" in body
     sidebar = client.get("/study/").get_data(as_text=True)
-    assert "我的题目" in sidebar and "题库刷题" in sidebar
+    assert "我的题目" in sidebar and "刷我的题" in sidebar and "共享池刷题" in sidebar
     assert prompts.MENU_GROUP_EMPTY["学习"] not in sidebar      # 这一组不再是空的
 
 
@@ -100,3 +100,14 @@ def test_shared_pool_page_lists_others_questions(client):
     body = client.get("/study/drill").get_data(as_text=True)
     assert "题干 4" in body and "题干 6" in body       # u2 的共享题 + 官方题
     assert "要共享的题" not in body
+
+
+def test_practice_own_bank_has_its_own_entry(client):
+    """★ 刷自己的题库早就有（/study/practice），只是侧边栏没给入口——现在补上，
+    并把原来那条含糊的"题库刷题"改叫"共享池刷题"，两条一眼分得开。"""
+    sign_up(client, username="stu")
+    post_question(client, stem="我自己录的一道题")
+    bar = client.get("/study/").get_data(as_text=True)
+    assert "/study/practice" in bar and "共享池刷题" in bar
+    body = client.get("/study/practice").get_data(as_text=True)
+    assert "我自己录的一道题" in body

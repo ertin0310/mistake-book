@@ -44,7 +44,9 @@ MENU = [
     #   给整组挂一个 "/study" 前缀会让"我的题目"在别的页面上也跟着亮（他指出的）。
     MenuItem("study_home", "学习", "我的题目", "/study/", mode="study", icon="book",
              visible=True),
-    MenuItem("study_drill", "学习", "题库刷题", "/study/drill", mode="study", icon="layers",
+    MenuItem("study_practice", "学习", "刷我的题", "/study/practice", mode="study",
+             icon="play", prefix="/study/practice", visible=True),
+    MenuItem("study_drill", "学习", "共享池刷题", "/study/drill", mode="study", icon="layers",
              prefix="/study/drill", visible=True),
     MenuItem("knowledge", "学习", "知识点", "/knowledge/", mode="study", icon="tag",
              prefix="/knowledge", visible=True),
