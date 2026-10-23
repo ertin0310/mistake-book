@@ -78,6 +78,16 @@ def add_mistake(conn, user_id, question_id, due_date="2026-10-21", deleted_at=No
                         (user_id, question_id, due_date, STAMP, STAMP, deleted_at)).lastrowid
 
 
+def add_review_log(conn, user_id, mistake_id, rating=2):
+    """手工落一笔复习流水（走 service 那条链在 `test_review_cycle.py` 里另有用例）。"""
+    return conn.execute(
+        "INSERT INTO review_log (user_id, mistake_id, reviewed_on, reviewed_at, rating,"
+        " rating_source, duration_seconds, algorithm_version, interval_before,"
+        " interval_after, due_date_before, due_date_after, step_before, step_after)"
+        " VALUES (?, ?, '2026-10-21', '2026-10-21 10:00:00', ?, 'user_override', 30, 'ladder-1',"
+        " 0, 1, '2026-10-21', '2026-10-22', 0, 1)", (user_id, mistake_id, rating)).lastrowid
+
+
 @pytest.fixture
 def db(mem_db):
     """两个用户 + 一活一停的科目 + 把每种可见性各摆一行。

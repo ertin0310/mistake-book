@@ -68,7 +68,7 @@ def practice():
 @bp.post("/practice/<int:question_id>")
 @decorators.require_login
 def practice_result(question_id):
-    csrf.validate(request.form.get(csrf.FORM_FIELD))
+    _require_form_token()
     row = question_service.practice_row(g.conn, decorators.current_user_id(), question_id)
     if row is None:
         abort(404, description=prompts.NOT_FOUND)
@@ -86,10 +86,7 @@ def edit_question(question_id):
     if row is None:
         abort(404)
     if request.method == "POST":
-        try:
-            csrf.validate(request.form.get(csrf.FORM_FIELD))
-        except Exception as exc:
-            return _form(request.form, [exc.message], row), 400
+        _require_form_token()
         errors = question_service.new_errors(g.conn, request.form)
         if errors:
             return _form(request.form, errors, row), 400
@@ -107,15 +104,12 @@ def edit_question(question_id):
 def delete_question(question_id):
     _require_form_token()
     question_service.remove(g.conn, decorators.current_user_id(), question_id)
-    flash("已经放进回收站（回收站页面在第 11 步，到时候能还原）。", "success")
+    flash("已经放进回收站，30 天内可以在回收站页还原。", "success")
     return redirect(url_for("study.my_questions"))
 
 
 def _require_form_token() -> None:
-    try:
-        csrf.validate(request.form.get(csrf.FORM_FIELD))
-    except Exception as exc:
-        abort(400, description=getattr(exc, "message", ""))
+    csrf.require_valid_token()          # 比签这件事全站只在 csrf 里写一份
 
 
 def _form(form, errors, row=None):

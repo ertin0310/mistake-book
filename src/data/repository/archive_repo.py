@@ -12,9 +12,9 @@
 import sqlite3
 
 from config import archive
-from config.prompts import RESTORE_CONFLICT
+from config.prompts import NOT_FOUND, RESTORE_CONFLICT
 from src.domain import clock
-from src.domain.errors import RestoreConflictError, ValidationError
+from src.domain.errors import NotFoundError, RestoreConflictError, ValidationError
 
 
 class ArchiveRepo:
@@ -123,7 +123,8 @@ class ArchiveRepo:
                 (row_id, user_id)).fetchone()
             clear = f"UPDATE {spec.table} SET {spec.deleted_column}=NULL WHERE id=?"
         if row is None:
-            raise ValidationError("这条不在你的回收站里")
+            # 别人的行与"不存在"给同一个答复：说"它存在但不是你的"本身就是泄露（七-1）
+            raise NotFoundError(NOT_FOUND)
         self._reject_conflict(spec, row)
         self.conn.execute(clear, (row_id,))
         self.conn.commit()

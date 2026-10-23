@@ -12,6 +12,10 @@ import sqlite3
 from src.data.repository.base import SCOPE_POLICY, BaseRepo
 from src.domain import normalize, visibility as vis
 
+# "能用"的定义只写这一份：状态是 approved 且没软删。它与"能不能看见"是两回事——
+# 作者看得见自己被驳回的那条，但那条绝不能被他当成"已经有了"来复用（三-6 的死局）。
+USABLE = "status = 'approved' AND deleted_at IS NULL"
+
 
 class KnowledgeRepo(BaseRepo):
     table = "knowledge_point"
@@ -23,15 +27,17 @@ class KnowledgeRepo(BaseRepo):
 
     def usable_names(self) -> set:
         """当前看得见的知识点名字集合，元素是 `(subject_id, 归一化名)`。"""
-        return {(row["subject_id"], row["name_normalized"]) for row in self.rows()}
+        return {(row["subject_id"], row["name_normalized"]) for row in self.rows(where=USABLE)}
 
     def find_usable(self, subject_id: int, name: str):
-        """在"当前这个人看得见"的行里按归一化名找，和 `usable_names` 同一个口径。
+        """在"能用"的行里按归一化名找：既要是 approved 的活行，也要当前这个人看得见。
 
-        ★ 不能裸 `SELECT ... WHERE name_normalized=?` 拿第一条：同名排在前面的可能
-          是别人那条下架/驳回的行，那样会误判"这条不能用"，刚建的知识点就挂不上题。
+        ★ 两个条件缺一不可：少后者，别人那条同名但已下架/驳回的行会先被捞上来，
+          刚建好的知识点挂不上题；少前者，作者本人会撞回自己那条被驳回的行，
+          页面提示"已经有了，去选用一条"，可那条是死的，他永远改不回来。
         """
-        rows = self.rows(where="subject_id = :subject_id AND name_normalized = :clean",
+        rows = self.rows(where="(subject_id = :subject_id AND name_normalized = :clean)"
+                              f" AND ({USABLE})",
                          params={"subject_id": subject_id,
                                  "clean": normalize.normalize_name(name)})
         return rows[0]["id"] if rows else None

@@ -37,6 +37,12 @@ class ImportSessionRepo(BaseRepo):
             (status, session_id, self.viewer_id))
         self.conn.commit()
 
+    def get_session(self, session_id: int):
+        """按 id 取自己那一批。别人报来的批次号一律取不到（确认入库前先问这个）。"""
+        return self.conn.execute(
+            "SELECT * FROM import_session WHERE id=? AND user_id=?",
+            (session_id, self.viewer_id)).fetchone()
+
     def rows_of(self, session_id: int) -> list:
         return self.conn.execute(
             "SELECT * FROM import_session_row WHERE session_id=? ORDER BY line_no",

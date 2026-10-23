@@ -8,7 +8,7 @@ import json
 
 from config import prompts
 from src.data.repository.question_repo import MINE, QuestionRepo
-from src.domain.errors import ValidationError
+from src.domain.errors import NotFoundError, ValidationError
 from src.domain.question_types import registry
 from src.services import review_service, subject_service
 
@@ -89,7 +89,12 @@ def shared_pool(conn, user_id: int, page: int = 1, subject_id=None):
 
 
 def save_edit(conn, user_id: int, question_id: int, form: dict) -> None:
-    """改题面。校验走和录题同一套规则，不另写一份。"""
+    """改题面。校验走和录题同一套规则，不另写一份。
+
+    ★ 先确认"这道题是我的"再动笔：`UPDATE ... WHERE user_id` 打空时改动行数是 0，
+      路由却照样会 flash"改好了"——那不是提示，是撒谎（步 14 的越权用例盯这个）。
+    """
+    require_mine(conn, user_id, question_id)
     handler = registry.get(form["type"])
     options_json, answer_json = handler.parse(form)
     QuestionRepo(conn, user_id).save_edit(question_id, (form.get("stem") or "").strip(),
@@ -98,4 +103,13 @@ def save_edit(conn, user_id: int, question_id: int, form: dict) -> None:
 
 
 def remove(conn, user_id: int, question_id: int) -> None:
+    require_mine(conn, user_id, question_id)
     QuestionRepo(conn, user_id).soft_delete(question_id)
+
+
+def require_mine(conn, user_id: int, question_id: int):
+    """不是自己的、或者根本不存在 → 404，不给 403（方案七-1：说"它存在但不是你的"就是泄露）。"""
+    row = QuestionRepo(conn, user_id).mine_one(question_id)
+    if row is None:
+        raise NotFoundError(prompts.NOT_FOUND)
+    return row

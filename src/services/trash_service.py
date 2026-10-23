@@ -7,6 +7,7 @@
 
 from config import archive
 from src.data.repository.archive_repo import ArchiveRepo
+from src.data.repository.question_repo import QuestionRepo
 from src.domain import clock
 
 TRASH_ENTITIES = ("question", "mistake", "tag")
@@ -37,8 +38,7 @@ def _describe(repo: ArchiveRepo, entity: str, row) -> dict:
     spec = archive.ENTITIES[entity]
     title = row[spec.title_column]
     if entity == "mistake":
-        question = repo.conn.execute("SELECT stem FROM question_bank WHERE id=?",
-                                     (row["question_id"],)).fetchone()
+        question = QuestionRepo(repo.conn, repo.viewer_id).any_visible(row["question_id"])
         title = question["stem"] if question else f"题目 #{row['question_id']}"
     return {"id": row["id"], "title": str(title)[:60],
             "deleted_at": (row[spec.deleted_column] or "")[:10]}

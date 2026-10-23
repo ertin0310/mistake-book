@@ -16,6 +16,7 @@ from src.data.repository.knowledge_repo import KnowledgeRepo
 from src.data.repository.question_repo import QuestionRepo
 from src.data.repository.subject_repo import SubjectRepo
 from src.domain import normalize
+from src.domain.errors import NotFoundError
 from src.domain.question_types import registry as types_registry
 
 
@@ -143,8 +144,14 @@ def stage(conn, user_id: int, target: str, fmt: str, filename: str, result: dict
 
 
 def commit(conn, user_id: int, session_id: int, create_missing: bool = False) -> dict:
-    """只写预览时通过的那些行；建知识点与建题在**同一个事务**里。"""
+    """只写预览时通过的那些行；建知识点与建题在**同一个事务**里。
+
+    ★ 批次号是别人的 = 不存在（七-1 的 404）。这个 id 从表单里来，是可以被人改的，
+      不判就等于把\确认导入\按钮开给了全仓库。
+    """
     repo = ImportSessionRepo(conn, user_id)
+    if repo.get_session(session_id) is None:
+        raise NotFoundError(prompts.NOT_FOUND)
     counts = {"questions": 0, "knowledge_points": 0, "subjects": 0}
     questions = QuestionRepo(conn, user_id)
     for stored in repo.rows_of(session_id):
