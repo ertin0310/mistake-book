@@ -558,11 +558,23 @@ _SHARE_TEXT = (
     "四、数据归属不变　内容始终归你所有，管理方不会代为修改、补充或再次发布。")
 
 
+_SITE_TEXT = """一、这个站存什么　题目、错题、复习流水、导入批次与你自己写的笔记。全部存在服务器本地的一个 SQLite 文件里，不上传到任何第三方。
+二、备份与恢复　数据库与图片都在 `var/` 目录，换机器或重装需要自己拷贝那个目录；仓库里不含它们，删掉 `var/` 等于从零开始。
+三、内容归你　你录的题、你写的解析与笔记归你所有，管理方不会代为修改、补充或再次发布；管理员的处置（下架、驳回）一律附理由，且你可以申诉。
+四、共享要你自己点　题目默认只有你能看见，只有你主动点「共享」并同意《共享须知》之后，别人才可能刷到它，答案解析与配图会一并公开。
+五、公开部署请先改密码　演示账号（demo / stu1 / stu2 / admin）的密码写在 README 里，任何对外部署都必须先改掉，否则任何人都能进别人的错题本。"""
+
+
 def _make_agreement(conn, users, today) -> None:
     conn.execute(
         "INSERT INTO agreement (version, seq, title, content, effective_from, created_at) "
         "VALUES (?,?,?,?,?,?)",
-        ("SHARE-1", 1, "共享须知", _SHARE_TEXT,
+        ("SITE-1", 1, "站点协议", _SITE_TEXT,
+         (today - timedelta(days=30)).isoformat(), _stamp(today - timedelta(days=30))))
+    conn.execute(
+        "INSERT INTO agreement (version, seq, title, content, effective_from, created_at) "
+        "VALUES (?,?,?,?,?,?)",
+        ("SHARE-1", 2, "共享须知", _SHARE_TEXT,
          (today - timedelta(days=30)).isoformat(), _stamp(today - timedelta(days=30))))
     # demo 选过"以后都同意"，stu1 没同意过 → 两种状态都能当场演示
     conn.execute("INSERT INTO user_agreement (user_id, version, agreed_at) VALUES (?,?,?)",

@@ -3,12 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ app_name }}{% endblock %} · 错题本</title>
+  <title>{% block title %}{{ app_name }}{% endblock %} · 奶蛙爱学习</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="app">
   <header class="topbar">
-    <div class="brand">错题本</div>
+    <a class="brand" href="{{ url_for('main.home') }}">
+      <img class="sticker" src="{{ url_for('static', filename='naifa.png') }}" alt="奶蛙">
+      <span>奶蛙爱学习</span>
+    </a>
 
     {# 模式开关：真做（方案三-18）。两条路径之一——POST /mode/<study|review> #}
     <nav class="modeswitch" aria-label="模式">

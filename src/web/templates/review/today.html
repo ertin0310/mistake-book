@@ -1,18 +1,24 @@
 {% extends "base.html" %}
 {% block title %}今日复习{% endblock %}
 {% block content %}
-<section class="card">
+<section class="card hero">
   <header class="pagehead">
     <h1>今日复习</h1>
-    <span class="muted">复习日 {{ queue.review_date }} · 上限 {{ queue.cap }} 道</span>
-    <a class="muted" href="{{ url_for('exporter.download', kind='review_log') }}"
-       title="{{ prompts.EXPORT_NOTICES.review_log }}">{{ prompts.EXPORT_BUTTON }}</a>
+    <span class="row">
+      <span class="muted">复习日 {{ queue.review_date }}</span>
+      <a class="muted" href="{{ url_for('exporter.download', kind='review_log') }}"
+         title="{{ prompts.EXPORT_NOTICES.review_log }}">{{ prompts.EXPORT_BUTTON }}</a>
+    </span>
   </header>
 
+  <div class="hero__figures">
+    <div><b>{{ queue.total }}</b><span>今天到期</span></div>
+    <div><b>{{ queue.cap }}</b><span>今日上限</span></div>
+    <div><b>{{ queue.over }}</b><span>超限未排</span></div>
+  </div>
+
   {% if first %}
-    <p>今天到期 <strong>{{ queue.total }}</strong> 道。
-      <a class="primary-link" href="{{ url_for('review.card', mistake_id=first) }}">开始第 1 道</a>
-    </p>
+    <a class="cta" href="{{ url_for('review.card', mistake_id=first) }}">开始第 1 道 →</a>
     {% if queue.over %}
       <p class="notice warning">
         今日另有 {{ queue.over }} 道到期，已到每日上限未安排。

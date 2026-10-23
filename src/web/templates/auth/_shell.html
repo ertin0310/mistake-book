@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}错题本{% endblock %} · 间隔重复复习</title>
+  <title>{% block title %}奶蛙爱学习{% endblock %} · 间隔重复复习</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="auth">
   <main class="card auth-card">
-    <h1 class="brand">错题本</h1>
+    <img class="sticker big" src="{{ url_for('static', filename='naifa.png') }}" alt="奶蛙">
+    <h1 class="brand script">奶蛙爱学习</h1>
     <p class="sub">间隔重复复习系统</p>
 
     {% for category, message in get_flashed_messages(with_categories=true) %}

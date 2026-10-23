@@ -26,7 +26,9 @@ SCOPE_NAMED = "named"      # 只许两个具名读法，禁止混用一条 SQL�
 # 注入豁免名单（二-11）：这些表**没有** user_id 列，任何 scope 都不许往它们身上注入。
 # `question_bank.user_id` 可为 NULL（官方题归属软件本身），所以它根本不走 SCOPE_USER，
 # 只走 SCOPE_NAMED 的 mine / shared_pool 两个读法——见步 8。
-NO_USER_INJECTION = frozenset({"subject", "agreement", "user_agreement", "user"})
+# `user_agreement` 不在名单里：它真的有 `user_id` 列，而且每一行只属于一个人
+# （"谁在哪一版上点过同意"是私有记录），所以它走 `SCOPE_USER`。
+NO_USER_INJECTION = frozenset({"subject", "agreement", "user"})
 
 # 可见性判据的 SQL 版，与 `src/domain/visibility.py` 里三个 Python 判据一一对应。
 #

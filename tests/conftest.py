@@ -95,6 +95,14 @@ def db(mem_db):
     刻意让每种情形都恰好有一行：任何一侧漏过滤就会立刻多一条或少一条，
     而不是碰巧对上。
     """
+    # 协议正文：`user_agreement.version` 外键指向 `agreement.version`，
+    # 所以"同意"之前这一版得先存在于库里——测试只摆版本行，正文由 seed 负责。
+    from config import agreement as agreement_config
+    for seq, (key, version) in enumerate(agreement_config.CURRENT.items(), start=1):
+        mem_db.execute("INSERT INTO agreement (version, seq, title, content, effective_from,"
+                       " created_at) VALUES (?, ?, ?, ?, '2026-10-01', ?)",
+                       (version, seq, agreement_config.KINDS[key].label, "测试用正文", STAMP))
+
     add_user(mem_db, 1, "u1")
     add_user(mem_db, 2, "u2")
     add_user(mem_db, 9, "admin", role="admin")
@@ -145,10 +153,27 @@ def client(db, monkeypatch):
 
 
 def sign_up(client, username="stu", password="goodpass123"):
-    """注册并登录（走的是真表单，顺带把防冒名签验了一遍）。"""
+    """注册 → 登录 → 同意《站点协议》，和真人第一次进来走的顺序一模一样。
+
+    协议这道门是登录后第一站（三-16a），所以每个页面级用例都得先过它——
+    这里统一过，免得二十个文件各写一遍、漏一个就全线 302。
+    """
     token = csrf_token(client, "/register")
-    return client.post("/register", data={"username": username, "password": password,
-                                          "confirm": password, "csrf_token": token})
+    response = client.post("/register", data={"username": username, "password": password,
+                                              "confirm": password, "csrf_token": token})
+    agree_to_terms(client)
+    return response
+
+
+def agree_to_terms(client):
+    """跟着门跳到协议页并点「我已阅读并同意」；已经同意过就直接返回。"""
+    gate = client.get("/")
+    location = gate.headers.get("Location", "")
+    if "/agreement/" not in location:
+        return None
+    version = location.split("/agreement/")[1].split("?")[0]
+    return client.post(f"/agreement/{version}/accept",
+                       data={"next": "/study/", "csrf_token": csrf_token(client, location)})
 
 
 def csrf_token(client, path):

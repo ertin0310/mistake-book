@@ -6,15 +6,21 @@
 GitHub 上根本没有这个文件夹（空文件夹 Git 也不提交），只能靠程序自己建。
 """
 
-from flask import Flask, g, render_template
+from flask import Flask, flash, g, redirect, render_template, request, url_for
 
 from config import menu, permissions, prompts, settings
 from src.data import db, seed
+from src.services import agreement_service
 from src.web import csrf, decorators
-from src.web.blueprints import (auth_blueprint, export_blueprint, import_blueprint, main,
-                                review_blueprint, settings_blueprint, study_blueprint)
+from src.web.blueprints import (agreement_blueprint, auth_blueprint, export_blueprint,
+                                import_blueprint, main, review_blueprint, settings_blueprint,
+                                study_blueprint)
 
-APP_NAME = "错题本 · 间隔重复复习"
+# 这些地址在"还没同意协议"时也得能打开，否则门自己把自己锁死了
+AGREEMENT_EXEMPT = {"static", "agreement.page", "agreement.accept",
+                    "auth.login", "auth.register", "auth.logout"}
+
+APP_NAME = "奶蛙爱学习 · 间隔重复复习"
 
 
 def create_app() -> Flask:
@@ -36,7 +42,9 @@ def create_app() -> Flask:
     app.register_blueprint(settings_blueprint.bp)
     app.register_blueprint(import_blueprint.bp)
     app.register_blueprint(export_blueprint.bp)
-    _register_connection(app)
+    app.register_blueprint(agreement_blueprint.bp)
+    _register_connection(app)          # 先开连接，协议门要用它
+    _register_agreement_gate(app)
     _register_template_globals(app)
     _register_error_pages(app)
     return app
@@ -123,3 +131,24 @@ def _register_error_pages(app: Flask) -> None:
     def _unexpected(exc: Exception):
         app.logger.exception("未预期的异常")
         return render_template("error.html", code=500, message=prompts.SERVER_ERROR), 500
+
+
+def _register_agreement_gate(app: Flask) -> None:
+    """登录后必须先同意《站点协议》（方案三-16a）。
+
+    ★ 集中在这一处判，不在二十个路由上各写一遍 `if 没同意`——那样一定会漏。
+    ★ 只挡已登录的人：没登录的交给 `require_login` 跳登录页，别在这儿抢活。
+    """
+
+    @app.before_request
+    def _gate():
+        if request.endpoint in AGREEMENT_EXEMPT:
+            return None
+        user_id = decorators.current_user_id()
+        if user_id is None:
+            return None
+        pending = agreement_service.pending_version(g.conn, user_id)
+        if pending:
+            flash(prompts.AGREEMENT_GATE, "warning")
+            return redirect(url_for("agreement.page", version=pending, next=request.path))
+        return None

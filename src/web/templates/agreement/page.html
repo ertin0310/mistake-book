@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }}{% endblock %}
+{% block content %}
+<section class="card agreement">
+  <p class="muted small">{{ prompts.AGREEMENT_VERSION_NOTE.format(version=doc.version,
+        effective=doc.effective_from) }}</p>
+  <h1>{{ doc.title }}</h1>
+  <div class="doc">{{ doc.content }}</div>
+
+  <form method="post" action="{{ url_for('agreement.accept', version=doc.version) }}" class="row">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="next" value="{{ next_url }}">
+    <button class="primary">{{ prompts.AGREEMENT_BUTTON }}</button>
+  </form>
+  <form method="post" action="{{ url_for('auth.logout') }}" class="row">
+    {{ csrf_input() | safe }}
+    <button>{{ prompts.AGREEMENT_DECLINE }}</button>
+  </form>
+  <p class="muted small">{{ prompts.AGREEMENT_DECLINE_NOTE }}</p>
+</section>
+{% endblock %}

@@ -109,3 +109,32 @@ EXPORT_NOTICES = {
     "questions": "这一份可以直接再导回来（列名、答案格式和导入模板一模一样）。",
     "review_log": "复习流水只导出、不导回——它是历史，不是可编辑的数据。",
 }
+
+
+# --------------------------------------------------------------- 知识点（步 18）
+
+KP_NAME_REQUIRED = "知识点名字不能空着。"
+KP_NAME_LIMIT = 60
+KP_NAME_TOO_LONG = "知识点名字太长了，最多 {limit} 个字。"
+KP_EXISTS = "这一科下已经有同名知识点：{names}。"
+KP_EXISTS_HINT = "如果这不是同一个知识点，勾上下面那颗「这不是同一个知识点」再提交。"
+KP_SUBMITTED = "提交好了：现在全都能用，同时已进待审队列。"
+KP_RESUBMITTED = "改好了，这一条重新回到待审。"
+KP_PENDING_NOTE = "管理员还没看过。不影响你现在就用。"
+KP_REJECTED_NOTE = "驳回原因：{note}"
+KP_HIDDEN_NOTE = "已被下架，只有你看得见这一条。"
+KP_NOT_SAME = "这不是同一个知识点"
+KP_STATUS_LABELS = {"approved": "在用", "rejected": "被驳回", "hidden": "已下架"}
+EMPTY_KP_POOL = "这一科下还没有知识点。提交一条，别人马上能用。"
+EMPTY_KP_MINE = "你还没提交过知识点。"
+
+
+# --------------------------------------------------------------- 协议（步 19 前置）
+
+AGREEMENT_TITLE = "请先阅读并同意《{title}》"
+AGREEMENT_VERSION_NOTE = "当前版本 {version} · {effective} 起生效"
+AGREEMENT_BUTTON = "我已阅读并同意"
+AGREEMENT_DECLINE = "不同意，退出登录"
+AGREEMENT_DECLINE_NOTE = "不同意也可以退出，你已有的数据不会被删除。"
+AGREEMENT_ACCEPTED = "已记录你的同意。"
+AGREEMENT_GATE = "使用之前请先同意《站点协议》。"
