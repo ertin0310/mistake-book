@@ -40,7 +40,7 @@ MENU = [
              visible=False),
     MenuItem("knowledge_appeal", "学习", "我的知识点申请", "/knowledge/mine", mode="study",
              icon="clock", visible=False),
-    MenuItem("import", "学习", "导入", "/import/", mode="study", icon="upload", visible=False),
+    MenuItem("import", "学习", "导入", "/import/", mode="study", icon="upload", visible=True),
     MenuItem("favorite", "学习", "收藏", "/favorite/", mode="both", icon="star", visible=False),
     MenuItem("tag", "学习", "标签", "/tag/", mode="study", icon="hashtag", visible=False),
 

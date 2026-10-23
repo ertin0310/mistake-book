@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}导入{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>批量导入</h1>
+  <p class="muted">表头照仓库里 <code>import-templates/示例题目.csv</code> 抄就行；
+     不知道行错在哪，先传 <code>示例题目-有脏行.csv</code> 看看这张表怎么报到行号。</p>
+  {% if error %}<p class="notice danger">{{ error }}</p>{% endif %}
+
+  <form method="post" action="{{ url_for('importer.upload') }}" enctype="multipart/form-data" class="stack">
+    {{ csrf_input() | safe }}
+    <label>导入什么
+      <select name="target">
+        {% for key, spec in targets.items() %}<option value="{{ key }}">{{ spec.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>文件格式
+      <select name="format">
+        {% for fmt in formats %}<option value="{{ fmt }}">{{ fmt|upper }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>选文件（CSV 给人改，JSONL 给机器写）
+      <input type="file" name="file" accept=".csv,.jsonl,.txt" required>
+    </label>
+    <button class="primary">先预览</button>
+  </form>
+
+  {% if pending %}
+  <hr class="rule">
+  <h3>上次预览完还没确认的批次</h3>
+  {% for batch in pending %}
+  <form method="post" action="{{ url_for('importer.confirm') }}" class="row">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="session_id" value="{{ batch.id }}">
+    <span class="muted">{{ batch.source_filename }} · {{ batch.created_at }}</span>
+    <button>直接确认这批</button>
+  </form>
+  {% endfor %}
+  {% endif %}
+
+  {% if result %}
+  <hr class="rule">
+  <h3>预览结果</h3>
+  <p>共 {{ result.rows|length }} 行：可以通过 <strong>{{ result.ok|length }}</strong> 行，
+     被拦下 <strong>{{ result.blocked|length }}</strong> 行。
+     {% if result.fixes %}<span class="muted">已自动修正 {{ result.fixes }} 处排版问题（中文引号、代码围栏、换行符）。</span>{% endif %}
+  </p>
+
+  {% if result.blocked %}
+  <table>
+    <tr><th class="n">行号</th><th>原因</th></tr>
+    {% for row in result.blocked %}
+      <tr><td class="n">{{ row.line }}</td><td class="danger">{{ row.errors|join('；') }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  {% if result.missing %}
+    <p class="notice warning">
+      这些知识点库里还没有：
+      {% for item in result.missing %}{{ item.name }}{% if not loop.last %}、{% endif %}{% endfor %}。
+    </p>
+  {% endif %}
+
+  {% if result.ok %}
+  <form method="post" action="{{ url_for('importer.confirm') }}" class="stack">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="session_id" value="{{ result.session_id }}">
+    {% if result.missing %}
+    <label class="check"><input type="checkbox" name="create_missing" value="1">
+      顺手一起建了（在同一个事务里先建知识点再建题）</label>
+    {% endif %}
+    <button class="primary">确认导入这 {{ result.ok|length }} 行</button>
+  </form>
+  {% else %}
+    <p class="empty">没有可导入的行，先回去改改文件。</p>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

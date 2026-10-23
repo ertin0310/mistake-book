@@ -12,16 +12,12 @@ from src.data.repository.profile_repo import SettingRepo
 from src.domain import clock
 from src.services import profile_service
 from src.domain.errors import ValidationError
-from tests.conftest import csrf_token, sign_up
+from tests.conftest import csrf_token, sign_up, uid_of
 
 
 def body_of(response):
     return response.get_data(as_text=True)
 
-
-def uid_of(db, username):
-    """注册出来的用户 id 由 SQLite 自增决定（fixture 里已经有 1/2/9），不能写死。"""
-    return db.execute("SELECT id FROM user WHERE username=?", (username,)).fetchone()["id"]
 
 
 # ---------------------------------------------------------------- 校验器本身

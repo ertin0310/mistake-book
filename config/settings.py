@@ -15,10 +15,13 @@ DATA_DIR = SRC_DIR / "data"
 VAR_DIR = PROJECT_ROOT / "var"
 UPLOAD_DIR = VAR_DIR / "uploads"
 DB_PATH = VAR_DIR / "mistake_book.db"
-SAMPLE_CSV_PATH = VAR_DIR / "示例题目.csv"
-SAMPLE_JSONL_PATH = VAR_DIR / "示例题目.jsonl"
 
+# ★ 样例放仓库里的 `import-templates/`，不放 `var/`：`var/` 进了 .gitignore，
+#   评审 clone 下来根本看不到，"当场就能导一份"这条演示就断了。
 IMPORT_TEMPLATE_DIR = PROJECT_ROOT / "import-templates"
+SAMPLE_CSV_PATH = IMPORT_TEMPLATE_DIR / "示例题目.csv"
+SAMPLE_DIRTY_CSV_PATH = IMPORT_TEMPLATE_DIR / "示例题目-有脏行.csv"
+SAMPLE_JSONL_PATH = IMPORT_TEMPLATE_DIR / "示例题目.jsonl"
 
 TRASH_RETENTION_DAYS = 30
 UPLOAD_MAX_BYTES = 5 * 1024 * 1024
@@ -80,6 +83,7 @@ def ai_enabled() -> bool:
 def init_environment() -> None:
     """建好运行期需要的目录并读入 .env。由 create_app() 在启动最早处调用。"""
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    IMPORT_TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
     _read_dotenv(PROJECT_ROOT / ".env")
 
 

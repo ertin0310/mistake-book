@@ -14,7 +14,7 @@ import json
 import random
 from datetime import date, datetime, timedelta
 
-from config import schedule, settings, tags
+from config import csv_spec, schedule, settings, tags
 from src.data import db
 from src.data.repository.user_repo import UserRepo
 from src.services import auth_service
@@ -583,34 +583,59 @@ def _make_appeals(conn, users, questions, points, today) -> None:
 
 
 def _write_sample_files() -> None:
-    """给评审一份当场就能导入的合法样例（没配 AI Key 也能测完导入）。"""
+    """写出当场就能用的导入样例（没配 AI Key 也能把导入这一条链演示完）。
+
+    ★ 样例里的题型只用现在真认得了的那些（`question_types/registry`）：
+      选择题、填空题的处理器在后面的步骤补，样例要是先写进去，导入页就会把它们
+      当成"还不支持的题型"拦下——用户以为样例坏了，其实是进度没到。
+    """
     rows = [
-        {"subject": "数学", "knowledge_points": ["牛顿第二定律"], "type": "choice",
-         "stem": "下列关于惯性的说法正确的是（　）",
-         "options": ["速度越大惯性越大", "质量越大惯性越大", "受力越大惯性越小", "惯性与参考系无关"],
-         "answer": {"letters": "B"},
-         "explanation": "惯性只由质量决定，与速度和受力都无关。", "source": "样例"},
-        {"subject": "数学", "knowledge_points": ["函数连续性"], "type": "blank",
-         "stem": "|x| 在 x=0 处______，在该点______。",
-         "options": [], "answer": [["连续"], ["不可导"]],
-         "explanation": "题干自带竖线，专门验证它不会把数据劈坏。", "source": "样例"},
-        {"subject": "数学", "knowledge_points": ["级数收敛"], "type": "blank",
-         "stem": "∑(1/2)^n 从 n=1 起的和等于______。", "options": [], "answer": [["1"]],
-         "explanation": "答案 1/2 含斜杠，验证斜杠不会被当成分隔符。", "source": "样例"},
+        {"subject": "数学", "knowledge_points": ["牛顿第二定律", "受力分析"], "type": "essay",
+         "stem": "写出牛顿第二定律的表达式，并说明它为什么只在惯性系里成立。",
+         "options": [],
+         "answer": {"text": "F=ma；非惯性系里要额外引入惯性力，直接把合外力等于 ma 就不成立了。"},
+         "explanation": "先判参考系，再列受力，是这类题的第一步。"},
+        {"subject": "数学", "knowledge_points": ["函数连续性"], "type": "essay",
+         "stem": "|x| 在 x=0 处连续吗？可导吗？说明理由。",
+         "options": [], "answer": {"text": "连续但不可导：左右导数分别为 1 和 -1，不相等。"},
+         "explanation": "题干里自带竖线，专门用来验证它不会被当成分隔符劈坏。"},
+        {"subject": "数学", "knowledge_points": ["级数收敛"], "type": "essay",
+         "stem": "∑(1/2)^n（n 从 1 起）收敛吗？若收敛求出它的和。",
+         "options": [], "answer": {"text": "公比 1/2 的绝对值小于 1，故收敛，和为 1。"},
+         "explanation": "答案含斜杠 1/2，走 CSV 也不许被劈开。"},
         {"subject": "英语", "knowledge_points": ["非谓语动词"], "type": "essay",
          "stem": "说明 seen 与 seeing 作状语的差别。", "options": [],
          "answer": {"text": "seen 表被动或完成，seeing 表主动或进行，判断依据是与主语的逻辑关系。"},
-         "explanation": "非谓语的核心是先找逻辑主语。", "source": "样例"},
+         "explanation": "非谓语的核心是先找逻辑主语。"},
     ]
+    settings.IMPORT_TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
     settings.SAMPLE_JSONL_PATH.write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n", encoding="utf-8")
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8", newline="\n")      # ★ 不写死换行符会被 Windows 换成 \r\n，导入页就白报"已修正 N 处"
 
-    with settings.SAMPLE_CSV_PATH.open("w", encoding="utf-8-sig", newline="") as handle:
+    _write_csv(settings.SAMPLE_CSV_PATH, rows)
+    dirty = [dict(rows[0]), dict(rows[1]), dict(rows[2]),
+             {**rows[3], "stem": "", "answer": {"text": ""}},          # 必填为空
+             {**rows[0], "type": "choice"},                            # 题型还没实现
+             {"subject": "物理", "knowledge_points": [], "type": "essay",
+              "stem": "科目不在可用列表里", "options": [], "answer": {"text": "答"}}]
+    _write_csv(settings.SAMPLE_DIRTY_CSV_PATH, dirty)
+
+
+def _write_csv(path, rows) -> None:
+    """列顺序照 `config/csv_spec` 写；知识点一格里用分号隔开（逗号是 CSV 自己的分隔符）。"""
+    columns = csv_spec.SPECS["question"]["columns"]
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["subject", "knowledge_points", "type", "stem",
-                         "options", "answer", "explanation", "source"])
+        writer.writerow(columns)
         for row in rows:
-            writer.writerow([row["subject"], "|".join(row["knowledge_points"]), row["type"],
-                             row["stem"], json.dumps(row["options"], ensure_ascii=False),
-                             json.dumps(row["answer"], ensure_ascii=False),
-                             row["explanation"], row["source"]])
+            writer.writerow([_sample_cell(row, column) for column in columns])
+
+
+def _sample_cell(row, column):
+    value = row.get(column, "")
+    if column == "knowledge_points":
+        return ";".join(value)
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, ensure_ascii=False)      # 单元格里的 JSON 由 csv 模块负责转义
+    return value

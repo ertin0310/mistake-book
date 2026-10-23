@@ -39,6 +39,11 @@ def add_user(conn, user_id, username, role="member"):
     return user_id
 
 
+def uid_of(db, username):
+    """注册走的是自增主键，测试里别硬写 id——第 6 个用户不一定是 6。"""
+    return db.execute("SELECT id FROM user WHERE username=?", (username,)).fetchone()["id"]
+
+
 def add_subject(conn, subject_id, name, status="active", deleted_at=None):
     conn.execute("INSERT INTO subject (id, name, status, created_at, updated_at, deleted_at)"
                  " VALUES (?, ?, ?, ?, ?, ?)",

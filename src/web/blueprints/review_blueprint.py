@@ -97,10 +97,7 @@ def rate(mistake_id):
 
 
 def _require_token() -> None:
-    try:
-        csrf.validate(request.form.get(csrf.FORM_FIELD))
-    except ValidationError as exc:
-        abort(400, description=exc.message)
+    csrf.require_valid_token()
 
 
 def _own_row(mistake_id):

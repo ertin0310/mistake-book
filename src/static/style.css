@@ -215,3 +215,10 @@ button.rating.r4 { border-color: var(--danger); }
 .inlineform { display: inline; }
 button.link { border: none; background: none; color: var(--accent); padding: 0 2px;
               text-decoration: underline; font-size: inherit; }
+
+/* ---------------------------------------------------------------- 导入页（步 12） */
+
+hr.rule { border: none; border-top: 1px solid var(--line); margin: 20px 0 14px; }
+label.check { display: flex; align-items: center; gap: 8px; font-size: 14px;
+              color: var(--ink); }
+label.check input { width: auto; }

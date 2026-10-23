@@ -8,7 +8,7 @@
 import hmac
 import secrets
 
-from flask import session
+from flask import abort, request, session
 
 from config import prompts
 from src.domain.errors import ValidationError
@@ -39,3 +39,15 @@ def validate(presented: str | None) -> None:
     expected = session.get(TOKEN_KEY)
     if not expected or not presented or not hmac.compare_digest(expected, presented):
         raise ValidationError(prompts.CSRF_FAILED)
+
+
+def require_valid_token() -> None:
+    """每个 POST 路由第一行调它：签不对就直接 400，不往下走任何业务。
+
+    放在这里而不是各蓝图各写一遍——规则只有一份事实（三-24），
+    将来要加"签过期重发"之类的行为也只改这一处。
+    """
+    try:
+        validate(request.form.get(FORM_FIELD))
+    except ValidationError as exc:
+        abort(400, description=exc.message)

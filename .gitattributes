@@ -1,0 +1,6 @@
+# 换行符：`import-templates/示例题目.jsonl` 必须是 LF。
+# 被 Git 换成 CRLF 的话，导入页会多报"已自动修正 4 处排版问题"——数据没错，
+# 但用户会以为样例本身有问题。CSV 走的是另一条通道（不洗换行），保持 Excel 习惯。
+* text=auto
+*.jsonl text eol=lf
+*.csv text eol=crlf

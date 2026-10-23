@@ -13,11 +13,9 @@ import pytest
 from config import archive, prompts
 from src.data.repository.archive_repo import ArchiveRepo
 from src.domain.errors import RestoreConflictError
-from tests.conftest import STAMP, add_question, add_user, csrf_token, sign_up
+from tests.conftest import (STAMP, add_question, add_user, csrf_token, sign_up,
+                          uid_of)
 
-
-def uid_of(db, username):
-    return db.execute("SELECT id FROM user WHERE username=?", (username,)).fetchone()["id"]
 
 SCHEMA = (Path(__file__).resolve().parent.parent / "src" / "data" / "schema.sql"
           ).read_text(encoding="utf-8")

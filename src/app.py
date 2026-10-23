@@ -11,8 +11,8 @@ from flask import Flask, g, render_template
 from config import menu, permissions, prompts, settings
 from src.data import db, seed
 from src.web import csrf, decorators
-from src.web.blueprints import (auth_blueprint, main, review_blueprint,
-                           settings_blueprint, study_blueprint)
+from src.web.blueprints import (auth_blueprint, import_blueprint, main, review_blueprint,
+                                settings_blueprint, study_blueprint)
 
 APP_NAME = "错题本 · 间隔重复复习"
 
@@ -34,6 +34,7 @@ def create_app() -> Flask:
     app.register_blueprint(study_blueprint.bp)
     app.register_blueprint(review_blueprint.bp)
     app.register_blueprint(settings_blueprint.bp)
+    app.register_blueprint(import_blueprint.bp)
     _register_connection(app)
     _register_template_globals(app)
     _register_error_pages(app)
