@@ -93,6 +93,20 @@ class QuestionRepo(BaseRepo):
              "explanation": explanation, "id": question_id, "viewer": self.viewer_id})
         self.conn.commit()
 
+    def set_visibility(self, question_id: int, shared: bool) -> int:
+        """共享/取消共享。返回改动行数——0 行就是这道题不是他的，调用方据此给 404。
+
+        ★ 取消共享只把 `visibility` 收回 private，`shared_at` 留着当历史：
+          "他什么时候共享过、又撤了"是失效页与申诉要看的线索。
+        """
+        stamp = "datetime('now','localtime')" if shared else "shared_at"
+        return self.conn.execute(
+            f"UPDATE question_bank SET visibility=:vis, shared_at={stamp},"
+            f" updated_at=datetime('now','localtime')"
+            f" WHERE id=:id AND user_id=:viewer",
+            {"vis": "shared" if shared else "private", "id": question_id,
+             "viewer": self.viewer_id}).rowcount
+
     def soft_delete(self, question_id: int) -> None:
         """最简软删：打 deleted_at + deleted_by（回收站全套在步 11）。
         ★ 只写自己的删除标记，管理员那套 `delisted_by` 是另一回事。"""

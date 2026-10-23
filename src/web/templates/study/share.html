@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}共享须知{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ doc.title }}</h1>
+  <p class="muted small">版本 {{ doc.version }} · {{ doc.effective_from }} 起生效</p>
+  <div class="doc">{{ doc.content }}</div>
+
+  <p class="notice">{{ prompts.SHARE_TERMS_WILL }}</p>
+
+  <form method="post" action="{{ url_for('study.share_decide', question_id=question_id) }}" class="stack">
+    {{ csrf_input() | safe }}
+    <button class="primary" name="decision" value="once">{{ prompts.SHARE_ONCE_BUTTON }}</button>
+    <button name="decision" value="always">{{ prompts.SHARE_ALWAYS_BUTTON }}</button>
+    <button name="decision" value="cancel">{{ prompts.SHARE_CANCEL_BUTTON }}</button>
+  </form>
+</section>
+{% endblock %}

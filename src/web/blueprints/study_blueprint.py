@@ -7,7 +7,7 @@ from flask import (Blueprint, abort, flash, g, redirect, render_template, reques
                    url_for)
 
 from config import prompts
-from src.services import question_service, subject_service
+from src.services import question_service, share_service, subject_service
 from src.web import csrf, decorators
 
 bp = Blueprint("study", __name__, url_prefix="/study")
@@ -105,6 +105,42 @@ def edit_question(question_id):
                   "subject_id": str(row["subject_id"])}, [], row)
 
 
+@bp.post("/share/<int:question_id>")
+@decorators.require_login
+def share(question_id):
+    """点「共享」的第一下：没签过当前版本的须知就先弹，绝不直接共享出去。"""
+    _require_form_token()
+    # ★ 先验归属再弹须知：否则别人能从"这道题返回 200 还是 404"探出题号是否存在（七-1）
+    share_service.require_mine(g.conn, decorators.current_user_id(), question_id)
+    if share_service.needs_terms(g.conn, decorators.current_user_id()):
+        return _terms(question_id, share_service.terms(g.conn, decorators.current_user_id()))
+    share_service.decide(g.conn, decorators.current_user_id(), question_id, "once")
+    flash(prompts.SHARED_ONCE, "success")
+    return redirect(url_for("study.my_questions"))
+
+
+@bp.post("/share/<int:question_id>/decide")
+@decorators.require_login
+def share_decide(question_id):
+    """须知页上那三颗按钮。"""
+    _require_form_token()
+    decision = request.form.get("decision", "cancel")
+    outcome = share_service.decide(g.conn, decorators.current_user_id(), question_id, decision)
+    flash({"shared": prompts.SHARED_ONCE, "shared_always": prompts.SHARED_ALWAYS,
+           "cancel": prompts.SHARE_CANCELLED}[outcome],
+          "warning" if outcome == "cancel" else "success")
+    return redirect(url_for("study.my_questions"))
+
+
+@bp.post("/unshare/<int:question_id>")
+@decorators.require_login
+def unshare(question_id):
+    _require_form_token()
+    share_service.unshare(g.conn, decorators.current_user_id(), question_id)
+    flash(prompts.UNSHARED, "success")
+    return redirect(url_for("study.my_questions"))
+
+
 @bp.post("/delete/<int:question_id>")
 @decorators.require_login
 def delete_question(question_id):
@@ -112,6 +148,10 @@ def delete_question(question_id):
     question_service.remove(g.conn, decorators.current_user_id(), question_id)
     flash("已经放进回收站，30 天内可以在回收站页还原。", "success")
     return redirect(url_for("study.my_questions"))
+
+
+def _terms(question_id, doc):
+    return render_template("study/share.html", question_id=question_id, doc=doc)
 
 
 def _require_form_token() -> None:

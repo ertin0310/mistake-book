@@ -345,3 +345,9 @@ textarea.sample {
   background: var(--bg-soft); color: var(--ink); white-space: pre; overflow: auto;
   resize: vertical;
 }
+
+/* 共享标记（步 19） */
+.tag-shared { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+              background: var(--ok-bg); color: var(--ok); border: 1px solid #cfe0c6; }
+.doc { white-space: pre-wrap; line-height: 1.75; background: var(--bg-soft);
+       border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 14px; }

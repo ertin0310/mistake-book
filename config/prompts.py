@@ -178,3 +178,17 @@ IMPORT_COPY_HINT = "点右侧按钮可复制"
 IMPORT_COPY_BUTTON = "复制"
 IMPORT_COPIED = "已复制到剪贴板"
 IMPORT_PASTE_PLACEHOLDER = "一行一道题，例如：{\"type\":\"essay\",\"subject\":\"数学\",\"stem\":\"...\",\"options\":[],\"answer\":{\"text\":\"...\"},\"explanation\":\"\",\"knowledge_points\":[\"...\"]}"
+
+# --------------------------------------------------------------- 共享（步 19）
+
+SHARE_BUTTON = "共享"
+UNSHARE_BUTTON = "取消共享"
+SHARE_TERMS_TITLE = "共享之前请先读一遍"
+SHARE_TERMS_WILL = ("共享后会发生这些：答案解析与配图会随题目一并公开；别人可以把这道题存进自己的错题本；你之后改动题面，改动对已存题的人不生效（他们存的是当时那一份）。")
+SHARE_ONCE_BUTTON = "仅本次同意并共享"
+SHARE_ALWAYS_BUTTON = "同意并授予长期授权（以后不再弹）"
+SHARE_CANCEL_BUTTON = "取消，暂不共享"
+SHARED_ONCE = "已共享，别人在共享池里能刷到这道题了。"
+SHARED_ALWAYS = "已共享，并记住了你的长期授权；须知正文升版后会再请你确认一次。"
+SHARE_CANCELLED = "没有共享，这道题仍然只有你自己看得到。"
+UNSHARED = "已取消共享。已经存了这道题的人不受影响。"

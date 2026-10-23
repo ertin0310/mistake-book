@@ -31,11 +31,26 @@
     <tr><th>题干</th><th>类型</th><th class="n">操作</th></tr>
     {% for row in page_obj.items %}
     <tr>
-      <td>{{ row['stem'][:60] }}{% if row['stem']|length > 60 %}…{% endif %}</td>
+      <td>{{ row['stem'][:60] }}{% if row['stem']|length > 60 %}…{% endif %}
+        {% if row['visibility'] == 'shared' %}<span class="tag-shared">{{ prompts.SHARED_MARK }}</span>{% endif %}
+      </td>
       <td class="muted">{{ row['type'] }}</td>
       <td class="n">
         <a href="{{ url_for('study.edit_question', question_id=row['id']) }}">改</a>
         {% if not request.path.startswith('/study/drill') %}
+        {% if row['visibility'] == 'shared' %}
+        <form method="post" class="inlineform"
+              action="{{ url_for('study.unshare', question_id=row['id']) }}">
+          {{ csrf_input() | safe }}
+          <button class="link">{{ prompts.UNSHARE_BUTTON }}</button>
+        </form>
+        {% else %}
+        <form method="post" class="inlineform"
+              action="{{ url_for('study.share', question_id=row['id']) }}">
+          {{ csrf_input() | safe }}
+          <button class="link">{{ prompts.SHARE_BUTTON }}</button>
+        </form>
+        {% endif %}
         <form method="post" class="inlineform"
               action="{{ url_for('study.delete_question', question_id=row['id']) }}">
           {{ csrf_input() | safe }}
