@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ prompts.ADMIN_SUBJECT_TITLE }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.ADMIN_SUBJECT_TITLE }}</h1>
+  <p class="notice">{{ prompts.ADMIN_NO_DELETE }}</p>
+
+  <form method="post" class="row">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="action" value="create">
+    <input name="name" maxlength="30" placeholder="新科目名" required>
+    <button class="primary">新建</button>
+  </form>
+
+  <table>
+    <tr><th>科目</th><th>状态</th><th class="n">操作</th></tr>
+    {% for row in rows %}
+    <tr>
+      <td>
+        <form method="post" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="action" value="rename">
+          <input type="hidden" name="subject_id" value="{{ row['id'] }}">
+          <input name="name" value="{{ row['name'] }}" maxlength="30" size="12">
+          <button class="link">改名</button>
+        </form>
+      </td>
+      <td>{{ '在用' if row['status'] == 'active' else '已停用' }}</td>
+      <td class="n">
+        <form method="post" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="action" value="toggle">
+          <input type="hidden" name="subject_id" value="{{ row['id'] }}">
+          <button class="link">{{ '停用' if row['status'] == 'active' else '恢复' }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

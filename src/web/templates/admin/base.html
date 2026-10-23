@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ prompts.ADMIN_TITLE }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="app admin-body">
+  <header class="topbar">
+    <div class="brand"><span class="script">{{ prompts.ADMIN_TITLE }}</span></div>
+    <nav class="adminnav">
+      <a href="{{ url_for('admin.home') }}">概览</a>
+      <a href="{{ url_for('admin.subject') }}">{{ prompts.ADMIN_SUBJECT_TITLE }}</a>
+      <a href="{{ url_for('admin.knowledge') }}">{{ prompts.ADMIN_KNOWLEDGE_TITLE }}</a>
+      <a href="{{ url_for('admin.appeal') }}">{{ prompts.ADMIN_APPEAL_TITLE }}</a>
+      <a href="{{ url_for('main.home') }}">{{ prompts.ADMIN_BACK }}</a>
+    </nav>
+    <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+      {{ csrf_input() | safe }}
+      <span class="muted">{{ username }}</span>
+      <button>退出</button>
+    </form>
+  </header>
+  <main class="admin-main">
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <p class="notice {{ category }}">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

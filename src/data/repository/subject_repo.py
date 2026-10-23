@@ -34,3 +34,36 @@ class SubjectRepo(BaseRepo):
     def is_usable(self, subject_id) -> bool:
         """能不能被新题引用：只认看得见的科目。下架的科目**读得到历史题、选不到新题**。"""
         return self.get(int(subject_id)) is not None
+
+    # ------------------------------------------------------------ 管理员侧（步 23）
+    # 这三个方法不改任何用户写的内容，只动字典本身；调用方必须先过 require_admin()。
+
+    def browse(self) -> list:
+        """后台列表：停用的也要看得见，所以不走可见性过滤。"""
+        return self.conn.execute("SELECT * FROM subject ORDER BY name").fetchall()
+
+    def create(self, name: str) -> int:
+        """直建科目。撞名由 `uq_subject_active` 拦，调用方接住翻成人话。"""
+        cursor = self.conn.execute(
+            "INSERT INTO subject (name, status, created_at, updated_at)"
+            " VALUES (?, 'active', datetime('now','localtime'), datetime('now','localtime'))",
+            (name.strip(),))
+        self.conn.commit()
+        return int(cursor.lastrowid)
+
+    def browse_one(self, subject_id: int):
+        """后台按 id 取一条（含停用的）。"""
+        return self.conn.execute("SELECT * FROM subject WHERE id=?", (subject_id,)).fetchone()
+
+    def rename(self, subject_id: int, name: str) -> int:
+        return self.conn.execute(
+            "UPDATE subject SET name=?, updated_at=datetime('now','localtime') WHERE id=?",
+            (name.strip(), subject_id)).rowcount
+
+    def set_status(self, subject_id: int, status: str) -> int:
+        """只有 active / hidden 两态——**科目没有"删除"这个动作**（永不物理删）。"""
+        rows = self.conn.execute(
+            "UPDATE subject SET status=?, updated_at=datetime('now','localtime') WHERE id=?",
+            (status, subject_id)).rowcount
+        self.conn.commit()
+        return rows

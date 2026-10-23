@@ -70,25 +70,15 @@ MENU = [
              parent="import", prefix="/import", visible=True),
     MenuItem("settings", "账户", "设置", "/settings/", mode="both", icon="gear",
              prefix="/settings", visible=True),
-    MenuItem("appeal", "账户", "申诉与反馈", "/appeal/", mode="both", icon="chat", visible=False),
+    MenuItem("appeal", "账户", "申诉与反馈", "/appeal/", mode="both", icon="chat",
+             prefix="/appeal", visible=True),
 
     # ---------------------------------------------------------- 管理（仅 admin）
-    # ★ 后台路由还没写，先全部 visible=False 占位：否则 admin 一登录就看到一排 404 链接。
-    #   每做完一页就把对应的 False 去掉，别一次全开。
-    MenuItem("admin_subject", "管理", "科目", "/admin/subject", role="admin", icon="book",
-             visible=False),
-    MenuItem("admin_knowledge", "管理", "知识点审核", "/admin/knowledge", role="admin",
-             icon="check", visible=False),
-    MenuItem("admin_question", "管理", "题目收起", "/admin/question", role="admin", icon="eye",
-             visible=False),
-    MenuItem("admin_archive", "管理", "隐藏库", "/admin/archive", role="admin", icon="box",
-             visible=False),
-    MenuItem("admin_import", "管理", "官方导入", "/admin/import", role="admin", icon="upload",
-             visible=False),
-    MenuItem("admin_appeal", "管理", "申诉队列", "/admin/appeal", role="admin", icon="chat",
-             visible=False),
-    MenuItem("admin_user", "管理", "用户与角色", "/admin/user", role="admin", icon="users",
-             visible=False),
+    # 后台内部那几页挂在 /admin 自己的导航里，普通侧边栏只留这一条入口。
+    # ★ 管理组只留一条入口（他 2026-10-22 的硬要求）：点进去是后台自己的布局，
+    #   不在普通侧边栏上铺七条链接。
+    MenuItem("admin_home", "管理", "后台", "/admin/", role="admin", icon="shield",
+             prefix="/admin", visible=True),
 ]
 
 

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ prompts.APPEAL_TITLE }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.APPEAL_TITLE }}</h1>
+  <p class="muted">{{ prompts.APPEAL_LEAD }}</p>
+  {% if error %}<p class="notice danger">{{ error }}</p>{% endif %}
+
+  <form method="post" class="stack">
+    {{ csrf_input() | safe }}
+    <label>{{ prompts.APPEAL_CATEGORY_LABEL }}
+      <select name="category" required>
+        {% for key, label in categories %}
+        <option value="{{ key }}" {{ 'selected' if key == form.get('category') }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>挂在哪个条目（选「其他反馈」可不填）
+      <input name="target_id" value="{{ form.get('target_id', '') }}" inputmode="numeric">
+    </label>
+    <label>{{ prompts.APPEAL_REASON_LABEL }}
+      <textarea name="reason" rows="4" required placeholder="写清楚是哪道题、哪个知识点、你希望怎么处理">{{ form.get('reason', '') }}</textarea>
+    </label>
+    <button class="primary">{{ prompts.APPEAL_SUBMIT_BUTTON }}</button>
+  </form>
+
+  <hr class="rule">
+  <h2>我提过的</h2>
+  {% if mine %}
+  <table>
+    <tr><th>类型</th><th>对象</th><th>说明</th><th>状态</th><th>回复</th></tr>
+    {% for item in mine %}
+    <tr>
+      <td>{{ item.category_label }}</td>
+      <td class="muted">{{ item.target }}</td>
+      <td>{{ item.reason }}</td>
+      <td>{{ item.status_label }}</td>
+      <td>{% if item.admin_reply %}{{ item.admin_reply }}{% else %}<span class="muted">—</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">{{ prompts.APPEAL_NONE }}</p>
+  {% endif %}
+</section>
+{% endblock %}

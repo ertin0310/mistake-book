@@ -114,6 +114,23 @@ class KnowledgeRepo(BaseRepo):
         self.conn.commit()
         return cursor.rowcount > 0
 
+    def mark_reviewed(self, point_id: int, admin_id: int) -> bool:
+        """审核通过：状态不动（本来就是 approved），只把 `reviewed_by` 填上 = 离开队列。"""
+        rows = self.conn.execute(
+            "UPDATE knowledge_point SET reviewed_by=:admin,"
+            " reviewed_at=datetime('now','localtime') WHERE id=:id",
+            {"admin": admin_id, "id": point_id}).rowcount
+        self.conn.commit()
+        return rows > 0
+
+    def set_status(self, point_id: int, status: str) -> bool:
+        """管理员改状态（下架 / 恢复）。作者那一侧的可见性由 policy 判据自动跟上。"""
+        rows = self.conn.execute(
+            "UPDATE knowledge_point SET status=?, updated_at=datetime('now','localtime')"
+            " WHERE id=?", (status, point_id)).rowcount
+        self.conn.commit()
+        return rows > 0
+
     def reject(self, point_id: int, admin_id: int, note: str) -> bool:
         """驳回：状态给作者留着原因，行不删（步 23 后台页面用的就是它）。"""
         cursor = self.conn.execute(

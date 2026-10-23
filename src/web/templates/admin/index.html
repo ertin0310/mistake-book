@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.ADMIN_TITLE }}</h1>
+  <p class="muted">{{ prompts.ADMIN_LEAD }}</p>
+  <div class="figures">
+    <div><b>{{ counts.subject }}</b><span>{{ prompts.ADMIN_SUBJECT_TITLE }}</span></div>
+    <div><b>{{ counts.knowledge }}</b><span>待审知识点</span></div>
+    <div><b>{{ counts.appeal }}</b><span>待处理申诉</span></div>
+  </div>
+  <p class="foot muted">{{ prompts.ADMIN_BLIND_NOTE }}</p>
+</section>
+{% endblock %}

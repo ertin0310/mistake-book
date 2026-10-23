@@ -356,3 +356,12 @@ textarea.sample {
 .menu-group ul ul.submenu { margin: 2px 0 0 14px; padding-left: 8px;
                             border-left: 1px solid var(--line); }
 .menu-group ul ul.submenu a { padding: 5px 8px; font-size: 13.5px; }
+
+/* 后台：独立布局（不套普通侧边栏），导航横在顶栏下面 */
+.admin-body { display: block; }
+.admin-main { max-width: 1080px; margin: 22px auto; padding: 0 22px; display: grid; gap: 16px; }
+.adminnav { display: flex; gap: 4px; flex-wrap: wrap; }
+.adminnav a { padding: 6px 12px; border-radius: 7px; text-decoration: none; color: var(--ink);
+              font-size: 14px; }
+.adminnav a:hover { background: var(--card); }
+.brand .script { font-family: "STXingkai", "华文行楷", "STKaiti", "KaiTi", "楷体", cursive; }

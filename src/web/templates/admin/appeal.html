@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ prompts.ADMIN_APPEAL_TITLE }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.ADMIN_APPEAL_TITLE }}</h1>
+  <p class="muted">{{ prompts.ADMIN_BLIND_NOTE }}</p>
+
+  {% if open %}
+  <table>
+    <tr><th>类型</th><th>对象</th><th>提交人</th><th>说明</th><th class="n">收尾</th></tr>
+    {% for item in open %}
+    <tr>
+      <td>{{ item.category_label }}</td>
+      <td class="muted">{{ item.target }}</td>
+      <td class="muted">{{ item.username }}</td>
+      <td>{{ item.reason }}</td>
+      <td class="n">
+        <form method="post" class="row">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="appeal_id" value="{{ item.id }}">
+          <input name="reply" size="18" placeholder="{{ prompts.ADMIN_REPLY_LABEL }}" required>
+          <button class="link">{{ prompts.ADMIN_CLOSE }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">{{ prompts.ADMIN_APPEAL_EMPTY }}</p>
+  {% endif %}
+
+  {% if handled %}
+  <hr class="rule">
+  <h2>已收尾</h2>
+  <table>
+    <tr><th>类型</th><th>说明</th><th>回复</th></tr>
+    {% for item in handled %}
+    <tr><td>{{ item.category_label }}</td><td>{{ item.reason }}</td>
+        <td class="muted">{{ item.admin_reply }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

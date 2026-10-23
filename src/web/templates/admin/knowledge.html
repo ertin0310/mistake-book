@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ prompts.ADMIN_KNOWLEDGE_TITLE }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ prompts.ADMIN_KNOWLEDGE_TITLE }}</h1>
+  <p class="muted">提交即入池：这一列是"已经能用、但管理员还没看过"的知识点。</p>
+
+  {% if pending %}
+  <table>
+    <tr><th>知识点</th><th>科目</th><th>提交人</th><th class="n">处置</th></tr>
+    {% for row in pending %}
+    <tr>
+      <td>{{ row['name'] }}</td>
+      <td class="muted">{{ row['subject'] }}</td>
+      <td class="muted">编号 {{ row['created_by_user_id'] }}</td>
+      <td class="n">
+        <form method="post" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="action" value="approve">
+          <input type="hidden" name="point_id" value="{{ row['id'] }}">
+          <button class="link">{{ prompts.ADMIN_APPROVE }}</button>
+        </form>
+        <form method="post" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="action" value="reject">
+          <input type="hidden" name="point_id" value="{{ row['id'] }}">
+          <input name="note" size="10" placeholder="{{ prompts.ADMIN_REJECT_NOTE }}" required>
+          <button class="link">{{ prompts.ADMIN_REJECT }}</button>
+        </form>
+        <form method="post" class="inlineform">
+          {{ csrf_input() | safe }}
+          <input type="hidden" name="action" value="hide">
+          <input type="hidden" name="point_id" value="{{ row['id'] }}">
+          <button class="link">{{ prompts.ADMIN_HIDE }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="empty">{{ prompts.ADMIN_KNOWLEDGE_EMPTY }}</p>
+  {% endif %}
+
+  <hr class="rule">
+  <h2>{{ prompts.ADMIN_DIRECT_CREATE }}</h2>
+  <form method="post" class="row">
+    {{ csrf_input() | safe }}
+    <input type="hidden" name="action" value="create">
+    <label>科目
+      <select name="subject_id">
+        {% for id, name in subjects %}<option value="{{ id }}">{{ name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>名称
+      <input name="name" maxlength="60" required>
+    </label>
+    <button class="primary">提交</button>
+  </form>
+</section>
+{% endblock %}
