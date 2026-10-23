@@ -6,7 +6,7 @@
 
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
-from config import prompts, settings
+from config import menu, prompts, settings
 from src.data import db
 from src.data.repository.profile_repo import SettingRepo
 from src.domain import clock
@@ -50,13 +50,13 @@ def switch_mode(mode):
         # 切模式是个小按钮，弹一整页错误太难看：贴一句提示回到原页就行。
         # 这不是"吞异常"——提示照样给用户，步 10 的统一出口管没被表单接住的那些。
         flash(exc.message, "warning")
-        return redirect(_safe_next(request.form.get("next")))
+        return redirect(menu.MODE_HOME.get(mode, url_for("main.home")))
     if mode not in prompts.MODE_LABELS:
         abort(404)
     decorators.set_mode(mode)
     SettingRepo(g.conn, decorators.current_user_id()).set("mode", mode)
     g.conn.commit()
-    return redirect(_safe_next(request.form.get("next")))
+    return redirect(menu.MODE_HOME.get(mode, url_for("main.home")))
 
 
 def _safe_next(target: str | None) -> str:

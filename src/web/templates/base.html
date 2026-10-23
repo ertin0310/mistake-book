@@ -18,7 +18,6 @@
       {% for key, label in mode_labels.items() %}
       <form method="post" action="{{ url_for('main.switch_mode', mode=key) }}">
         {{ csrf_input() | safe }}
-        <input type="hidden" name="next" value="{{ request.path }}">
         <button class="mode{{ ' on' if key == mode else '' }}">{{ label }}</button>
       </form>
       {% endfor %}
@@ -40,13 +39,23 @@
         <h2>{{ group }}</h2>
         {% if items %}
         <ul>
-          {% for item in items %}
+          {% for item in top_level(items) %}
           <li class="{{ 'active' if is_active(item, request.path) }}">
             <a href="{{ item.url }}">{{ item.label }}
               {% if item.badge and badges.get(item.badge) %}
               <span class="badge">{{ badges[item.badge] }}</span>
               {% endif %}
             </a>
+            {% set kids = children_of(item.key, items) %}
+            {% if kids %}
+            <ul class="submenu">
+              {% for kid in kids %}
+              <li class="{{ 'active' if is_active(kid, request.path) }}">
+                <a href="{{ kid.url }}">{{ kid.label }}</a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
           </li>
           {% endfor %}
         </ul>

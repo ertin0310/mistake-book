@@ -4,6 +4,8 @@
 当成权限来实现。
 """
 
+import re
+
 from config import prompts
 from tests.conftest import csrf_token, sign_up
 
@@ -30,15 +32,36 @@ def test_new_user_defaults_to_study(client):
     assert 'class="mode on">学习' in body and 'class="mode">' in body
 
 
+def sidebar(body):
+    """只看侧边栏那一块。首页正文里本来就写着"今日复习"等功能名，整页比会误判。"""
+    match = re.search(r"<aside.*?</aside>", body, re.S)
+    assert match, "页面里没有侧边栏"
+    return match.group(0)
+
+
 def test_menu_groups_swap_with_mode(client):
-    """切模式 → 侧边栏那一组整块换掉（步 8、9 之后两组都有真条目了）。"""
+    """切模式 → 那一组整块换掉；但「录题 / 导入」两种模式都得在。"""
     sign_up(client, username="stu")
-    study_body = client.get("/").get_data(as_text=True)
-    assert "/study/" in study_body and "/review/today" not in study_body   # 复习组整块不出现
+    study_bar = sidebar(client.get("/").get_data(as_text=True))
+    assert "我的题目" in study_bar and "今日复习" not in study_bar   # 复习组整块不出现
 
     client.post("/mode/review", data={"csrf_token": csrf_token(client, "/")})
-    review_body = client.get("/").get_data(as_text=True)
-    assert "/review/today" in review_body and "/study/" not in review_body   # 换成复习组
+    review_bar = sidebar(client.get("/").get_data(as_text=True))
+    assert "今日复习" in review_bar and "我的题目" not in review_bar  # 换成复习组
+
+    # ★ 录题不该被模式挡住：复习模式下也要能手动录题、能传 CSV
+    for bar in (study_bar, review_bar):
+        assert "手动录题" in bar and "CSV 录题" in bar
+
+
+def test_mode_buttons_land_on_that_mode_home(client):
+    """点「学习」跳我的题目、点「复习」跳今日复习——切完停在原地会让人觉得开关没生效。"""
+    sign_up(client, username="stu")
+    to_review = client.post("/mode/review", data={"csrf_token": csrf_token(client, "/")})
+    assert to_review.headers["Location"].endswith("/review/today")
+    to_study = client.post("/mode/study",
+                           data={"csrf_token": csrf_token(client, "/review/today")})
+    assert to_study.headers["Location"].endswith("/study/")
 
 
 def test_mode_is_not_a_permission(client):

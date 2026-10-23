@@ -351,3 +351,8 @@ textarea.sample {
               background: var(--ok-bg); color: var(--ok); border: 1px solid #cfe0c6; }
 .doc { white-space: pre-wrap; line-height: 1.75; background: var(--bg-soft);
        border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 14px; }
+
+/* 侧边栏可展开的子项（步 17 收尾：导入 = 手动录题 / CSV 录题） */
+.menu-group ul ul.submenu { margin: 2px 0 0 14px; padding-left: 8px;
+                            border-left: 1px solid var(--line); }
+.menu-group ul ul.submenu a { padding: 5px 8px; font-size: 13.5px; }
