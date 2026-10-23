@@ -3,12 +3,14 @@
 ★ 答案一开始不出现；**没点「看答案」就没有自评按钮**——盲评没有意义，
   也会让耗时失去含义。计时起点=进入这道题，终点=按下「看答案」那一刻，
   之后阅读答案的时间不计入。
+★ 计时可以**暂停**：中途去查资料、被叫走，不该算成"这题我想了十分钟"。
+  起点与暂停时长存在会话里（不藏在表单里），所以刷新页面、点暂停都不会把已过的时间丢掉。
 """
 
 import time
 
 from flask import (Blueprint, abort, flash, g, redirect, render_template, request,
-                   url_for)
+                   session, url_for)
 
 from config import prompts
 from src.data.repository.base import Page
@@ -75,7 +77,20 @@ def restore_from_trash():
 @decorators.require_login
 def card(mistake_id):
     row = _own_row(mistake_id)
-    return render_template("review/card.html", row=row, started=int(time.time()))
+    timer = _timer(mistake_id)
+    return render_template("review/card.html", row=row, started=timer["started"],
+                           paused=bool(timer["paused_since"]))
+
+
+@bp.post("/card/<int:mistake_id>/pause")
+@decorators.require_login
+def pause(mistake_id):
+    """暂停 / 继续这道题的计时。回到本页时起点不变，所以前面想的时间不会白丢。"""
+    csrf.require_valid_token()
+    _own_row(mistake_id)
+    flash(prompts.TIMER_PAUSED if _toggle_pause(mistake_id) else prompts.TIMER_RESUMED,
+          "success")
+    return redirect(url_for("review.card", mistake_id=mistake_id))
 
 
 @bp.post("/card/<int:mistake_id>/reveal")
@@ -88,7 +103,7 @@ def reveal(mistake_id):
     """
     _require_token()
     row = _own_row(mistake_id)
-    seconds = _seconds(request.form.get("started"))
+    seconds = _elapsed(mistake_id, request.form.get("started"))
     submitted = request.form.get("submitted", "")
     question = row["question"]
     verdict = (question_service.grade(question, submitted)
@@ -121,7 +136,7 @@ def retract(mistake_id):
 def rate(mistake_id):
     _require_token()
     row = _own_row(mistake_id)
-    seconds = _seconds(request.form.get("started"))
+    seconds = _form_seconds(request.form)
     rating = request.form.get("rating", type=int) or 0
     try:
         result = review_service.rate(g.conn, decorators.current_user_id(), mistake_id, rating,
@@ -138,6 +153,19 @@ def rate(mistake_id):
     if next_id is not None:
         return redirect(url_for("review.card", mistake_id=next_id))
     return redirect(url_for("review.today"))
+
+
+def _form_seconds(form) -> int:
+    """自评这一枪用的耗时 = 看答案那一刻算出来的那个数。
+
+    ★ 不能让自评时再按墙上时间算一遍：从"看答案"到"点档位"这几秒是在读答案，
+      不是在想题——那几秒已经明确不计入耗时（三-1）。
+    """
+    raw = form.get("elapsed")
+    try:
+        return max(0, min(int(raw), MAX_SECONDS))
+    except (TypeError, ValueError):
+        return _seconds(form.get("started"))
 
 
 def _rating_source(conn, user_id: int, subject_id: int, seconds: int, rating: int) -> str:
@@ -163,6 +191,46 @@ def _own_row(mistake_id):
     if question is None:
         abort(404, description=prompts.NOT_FOUND)
     return {"mistake": row, "question": question}
+
+
+TIMER_KEY = "review_timer"
+
+
+def _timer(mistake_id: int) -> dict:
+    """这道题的计时器：起点、暂停起点、已累计暂停秒数。"""
+    return session.setdefault(TIMER_KEY, {}).setdefault(
+        str(mistake_id), {"started": int(time.time()), "paused_since": None, "paused_total": 0})
+
+
+def _toggle_pause(mistake_id: int) -> bool:
+    """返回切换之后是不是处于暂停中。"""
+    timer = _timer(mistake_id)
+    now = int(time.time())
+    if timer["paused_since"]:
+        timer["paused_total"] += max(0, now - timer["paused_since"])
+        timer["paused_since"] = None
+    else:
+        timer["paused_since"] = now
+    session[TIMER_KEY] = {**session.get(TIMER_KEY, {}), str(mistake_id): timer}
+    return bool(timer["paused_since"])
+
+
+def _elapsed(mistake_id: int, raw=None) -> int:
+    """真正用于耗时统计的秒数 = 墙上时间 − 已累计暂停 −（还挂着的话）当前这段暂停。
+
+    会话里没有计时器（直接敲网址进来、或测试里手工 POST）才退回表单带来的起点。
+    """
+    timer = session.get(TIMER_KEY, {}).get(str(mistake_id))
+    if not timer:
+        return _seconds(raw)
+    now = int(time.time())
+    paused = int(timer.get("paused_total") or 0)
+    if timer.get("paused_since"):
+        paused += max(0, now - int(timer["paused_since"]))
+        timer["paused_total"], timer["paused_since"] = paused, None      # 看答案 = 结束暂停
+    value = now - int(timer["started"]) - paused
+    session[TIMER_KEY].pop(str(mistake_id), None)                        # 这一题的计时到此为止
+    return max(0, min(value, MAX_SECONDS))
 
 
 def _seconds(raw) -> int:

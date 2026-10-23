@@ -12,7 +12,17 @@
     <label>你的回忆（写不写都行，写了印象更深）
       <textarea name="submitted" rows="4" placeholder="先自己过一遍再写"></textarea>
     </label>
-    <button class="primary">{{ prompts.ANSWER_HIDDEN_BUTTON }}</button>
+    <div class="row">
+      <button class="primary">{{ prompts.ANSWER_HIDDEN_BUTTON }}</button>
+      <button class="link" name="noop" form="pause-form">{{ prompts.TIMER_HINT }}</button>
+    </div>
+  </form>
+
+  <form method="post" id="pause-form"
+        action="{{ url_for('review.pause', mistake_id=row.mistake['id']) }}">
+    {{ csrf_input() | safe }}
+    <button class="quiet">{{ prompts.TIMER_RESUME_BUTTON if paused
+                                else prompts.TIMER_PAUSE_BUTTON }}</button>
   </form>
 </section>
 {% endblock %}

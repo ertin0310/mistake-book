@@ -244,3 +244,11 @@ ADMIN_BLIND_NOTE = "提交人是谁，被处置的作者永远看不到。"
 FORBIDDEN_ADMIN = "这一页只有管理员能进。"
 REVIEW_CONTINUE = "继续第 {n} 道 →"
 REVIEW_DONE_ALL = "今天到期的题都刷完了。"
+
+# --------------------------------------------------------------- 计时暂停（步 9 补）
+
+TIMER_PAUSE_BUTTON = "暂停计时"
+TIMER_RESUME_BUTTON = "继续计时"
+TIMER_PAUSED = "计时已暂停。去查资料吧，这段时间不算进耗时。"
+TIMER_RESUMED = "计时继续。"
+TIMER_HINT = "中途要离开？暂停一下，耗时才准。"

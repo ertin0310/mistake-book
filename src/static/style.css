@@ -378,3 +378,6 @@ details.submenu > summary::after { content: "▾"; margin-left: auto; color: var
 details.submenu[open] > summary::after { transform: rotate(180deg); }
 details.submenu > summary:hover { background: var(--bg-soft); }
 details.submenu li.active > a { font-weight: 700; }
+
+button.quiet { background: transparent; border-style: dashed; color: var(--ink-soft); }
+button.quiet:hover { color: var(--accent); border-color: var(--accent); }

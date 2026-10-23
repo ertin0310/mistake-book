@@ -35,6 +35,7 @@
   <form method="post" action="{{ url_for('review.rate', mistake_id=row.mistake['id']) }}" class="ratings">
     {{ csrf_input() | safe }}
     <input type="hidden" name="started" value="{{ started }}">
+    <input type="hidden" name="elapsed" value="{{ seconds }}">
     {% for value, label in ratings.items() %}
     <button name="rating" value="{{ value }}"
             class="rating r{{ value }}{{ ' on' if value == preselect else '' }}">

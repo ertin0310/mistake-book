@@ -206,13 +206,49 @@ def test_full_review_flow_in_the_browser(client, db):
 
     card = client.get(f"/review/card/{mistake_id}").get_data(as_text=True)
     assert "复习流程题" in card and "参考答案" not in card        # ★ 答案此刻不出现
+    assert "暂停计时" in card                                     # 计时可以中途停
     started = int(time.time()) - 12
     token = csrf_token(client, f"/review/card/{mistake_id}")
     answer_page = client.post(f"/review/card/{mistake_id}/reveal",
                               data={"started": str(started), "submitted": "我写的",
                                     "csrf_token": token}).get_data(as_text=True)
-    assert "参考答案" in answer_page and "12 秒" in answer_page   # 计时终点=按下看答案
+    # 计时起点存在会话里（刷新不丢），所以这里只验"有耗时"，具体秒数由
+    # test_pause_keeps_the_paused_minutes_out 用假时钟精确验
+    assert "参考答案" in answer_page and "这题你花了" in answer_page
     assert "熟悉啦" in answer_page and "没记住" in answer_page
     client.post(f"/review/card/{mistake_id}/rate",
                 data={"started": str(started), "rating": "1", "csrf_token": token})
     assert client.get("/review/today").status_code == 200
+
+
+def test_pause_keeps_the_paused_minutes_out(client, db, monkeypatch):
+    """★ 暂停那几分钟不该算进耗时：查资料、被叫走，都不算"这题我想了十分钟"。"""
+    from src.web.blueprints import review_blueprint
+
+    sign_up(client, username="stu")
+    client.post("/study/new", data={"subject_id": "1", "type": "essay", "stem": "暂停计时题",
+                                    "answer": "答案", "explanation": "",
+                                    "csrf_token": csrf_token(client, "/study/new")})
+    qid = db.execute("SELECT id FROM question_bank WHERE stem='暂停计时题'").fetchone()["id"]
+    client.post(f"/study/practice/{qid}", data={
+        "result": "wrong", "submitted": "", "csrf_token": csrf_token(client, "/study/practice")})
+    mistake_id = int(re.search(r"/review/card/(\d+)",
+                               client.get("/review/today").get_data(as_text=True)).group(1))
+
+    # 从"真实现在"起步往前拨，而不是拿 1970 年的假时间：会话签名的过期判定也读
+    # time.time()，把时钟拨到 1970 会让 cookie 当场过期，测试就变成"没登录"了
+    clock = {"now": time.time()}
+    monkeypatch.setattr(review_blueprint.time, "time", lambda: clock["now"])
+
+    opened = client.get(f"/review/card/{mistake_id}")             # 起点 = 此刻
+    token = csrf_token(client, f"/review/card/{mistake_id}")
+    clock["now"] += 100                                           # 想了 100 秒
+    client.post(f"/review/card/{mistake_id}/pause", data={"csrf_token": token})
+    clock["now"] += 600                                           # 去查资料 600 秒
+    client.post(f"/review/card/{mistake_id}/pause", data={"csrf_token": token})
+    clock["now"] += 50                                            # 回来又想 50 秒
+    page = client.post(f"/review/card/{mistake_id}/reveal",
+                       data={"started": "1000000", "submitted": "", "csrf_token": token}
+                       ).get_data(as_text=True)
+    assert "这题你花了 150 秒" in page                             # 100 + 50，暂停那 600 秒不算
+    assert db.execute("SELECT COUNT(*) AS n FROM review_log").fetchone()["n"] == 0
