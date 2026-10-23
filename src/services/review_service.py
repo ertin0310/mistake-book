@@ -37,7 +37,9 @@ def due_count(conn, user_id: int) -> int:
 def next_due(conn, user_id: int, exclude_id=None):
     """今天还剩哪一道该刷（用于"评完自动跳下一题"）。没有下一道就返回 None。"""
     review_date = clock.review_date_of(_rollover(conn, user_id))
-    for row in MistakeRepo(conn, user_id).due_page(review_date, page=1, limit=50).items:
+    # ★ `due_page` 返回的是 (rows, total, page, pages) 四元组，不是 Page 对象：
+    #   写 `.items` 时测试没断这条路的返回码，线上一点「评好了」就 500。
+    for row in MistakeRepo(conn, user_id).due_page(review_date, page=1, limit=50)[0]:
         if exclude_id is None or row["id"] != exclude_id:
             return row["id"]
     return None

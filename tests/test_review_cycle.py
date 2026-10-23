@@ -216,9 +216,32 @@ def test_full_review_flow_in_the_browser(client, db):
     # test_pause_keeps_the_paused_minutes_out 用假时钟精确验
     assert "参考答案" in answer_page and "这题你花了" in answer_page
     assert "熟悉啦" in answer_page and "没记住" in answer_page
-    client.post(f"/review/card/{mistake_id}/rate",
-                data={"started": str(started), "rating": "1", "csrf_token": token})
+    rated = client.post(f"/review/card/{mistake_id}/rate",
+                        data={"started": str(started), "rating": "1", "csrf_token": token})
+    # ★ 状态码必须断：这一枪 500 过一次，只查后面的页面看不出来
+    assert rated.status_code == 302
+    assert rated.headers["Location"].endswith("/review/today")   # 只剩这一道 → 回列表
     assert client.get("/review/today").status_code == 200
+
+
+def test_rating_one_jumps_to_the_next_due_card(client, db):
+    """★ 两道都到期：评完第一道直接落到第二道，不用再回列表点「开始第 1 道」。"""
+    sign_up(client, username="stu")
+    for n in (1, 2):
+        client.post("/study/new", data={"subject_id": "1", "type": "essay",
+                                        "stem": f"自动跳题 {n}", "answer": "答案",
+                                        "explanation": "",
+                                        "csrf_token": csrf_token(client, "/study/new")})
+        qid = db.execute("SELECT id FROM question_bank WHERE stem=?",
+                         (f"自动跳题 {n}",)).fetchone()["id"]
+        client.post(f"/study/practice/{qid}", data={
+            "result": "wrong", "submitted": "",
+            "csrf_token": csrf_token(client, "/study/practice")})
+    first, second = [row["id"] for row in db.execute("SELECT id FROM mistake ORDER BY id")]
+    rated = client.post(f"/review/card/{first}/rate", data={
+        "rating": "1", "csrf_token": csrf_token(client, f"/review/card/{first}")})
+    assert rated.status_code == 302
+    assert rated.headers["Location"].endswith(f"/review/card/{second}")
 
 
 def test_pause_keeps_the_paused_minutes_out(client, db, monkeypatch):
